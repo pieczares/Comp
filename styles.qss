@@ -1,0 +1,162 @@
+QWidget {
+    font-family: "Segoe UI", "Arial";
+    font-size: 14px;
+    color: #17243b;
+}
+
+QMainWindow, QWidget#Root {
+    background: #f4f7fb;
+}
+
+QFrame#Header {
+    background: white;
+    border-bottom: 1px solid #e4eaf2;
+}
+
+QLabel#Logo {
+    color: #2463eb;
+    font-size: 25px;
+    font-weight: 800;
+}
+
+QLabel#Muted {
+    color: #758298;
+}
+
+QFrame#Hero {
+    background: #eaf1ff;
+    border: 1px solid #d6e4ff;
+    border-radius: 20px;
+}
+
+QLabel#HeroTitle {
+    font-size: 32px;
+    font-weight: 800;
+    color: #17366d;
+}
+
+QLabel#HeroDescription {
+    color: #536b91;
+    font-size: 15px;
+}
+
+QLineEdit, QComboBox {
+    background: white;
+    border: 1px solid #dce3ee;
+    border-radius: 10px;
+    padding: 11px 14px;
+    min-height: 22px;
+}
+
+QLineEdit:focus, QComboBox:focus {
+    border: 1px solid #2463eb;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 28px;
+}
+
+QComboBox QAbstractItemView {
+    background: white;
+    selection-background-color: #eaf1ff;
+    selection-color: #17243b;
+}
+
+QPushButton {
+    background: #2463eb;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-weight: 600;
+}
+
+QPushButton:hover {
+    background: #174fce;
+}
+
+QPushButton:pressed {
+    background: #123da2;
+}
+
+QPushButton#Secondary {
+    background: #eaf1ff;
+    color: #2463eb;
+}
+
+QPushButton#Secondary:hover {
+    background: #dbe7ff;
+}
+
+QFrame#ProductCard {
+    background: white;
+    border: 1px solid #e1e7f0;
+    border-radius: 16px;
+}
+
+QFrame#ProductCard:hover {
+    border: 1px solid #a7c3fc;
+}
+
+QLabel#ProductImage {
+    background: #f2f6fc;
+    border-radius: 12px;
+    font-size: 58px;
+}
+
+QLabel#ProductTitle {
+    font-size: 17px;
+    font-weight: 700;
+}
+
+QLabel#Price {
+    font-size: 25px;
+    font-weight: 800;
+    color: #17243b;
+}
+
+QLabel#Badge {
+    background: #e8f7ef;
+    color: #21804f;
+    border-radius: 7px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+
+QLabel#SectionTitle {
+    font-size: 21px;
+    font-weight: 700;
+}
+
+QScrollArea {
+    background: transparent;
+    border: none;
+}
+
+QScrollBar:vertical {
+    background: #f4f7fb;
+    width: 9px;
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+    background: #c4cede;
+    border-radius: 4px;
+    min-height: 30px;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0;
+}
+
+QDialog {
+    background: #f4f7fb;
+}
+
+QFrame#Offer {
+    background: white;
+    border: 1px solid #e1e7f0;
+    border-radius: 10px;
+}
