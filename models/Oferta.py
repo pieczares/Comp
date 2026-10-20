@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 from decimal import Decimal
+from typing import Literal
 
 
 @dataclass
 class Oferta:
-    hurtownia: str
-    EAN: str | None
-    nazwa: str
+    hurtownia_id: int
+    kod: str
     cena_netto: Decimal
     cena_brutto: Decimal
-    url: str
+    jednostka: Literal["szt","kg"]

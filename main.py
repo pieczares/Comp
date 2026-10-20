@@ -400,7 +400,6 @@ class MainWindow(QMainWindow):
             if self.calculate_columns() != self.column_count:
                 self.rebuild_grid()
 
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
