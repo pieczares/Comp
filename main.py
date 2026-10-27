@@ -18,8 +18,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from models.Product import Product
-
 # PRODUCTS = [
 #     Product(
 #         "Smartfon Nova X",
@@ -403,16 +401,41 @@ from models.Product import Product
                 
                 
                 
-from integrations.produkty_api import pobierz_produkty_api
+from integrations.Produkt_api import ProduktApi
+from models.Alarm import Alarm
+from models.Ulubione import Ulubione
+from models.Produkt import Produkt
+from decimal import Decimal
 
 if __name__ == "__main__":
 
-    produkty: list[Product] = pobierz_produkty_api("http://127.0.0.1:8000/produkty?limit=200&offset=0")
+    produkty: list[Produkt] = ProduktApi.pobierz_produkty_api("http://127.0.0.1:8000/produkty?limit=200&offset=0")
+    ulubione = Ulubione()
 
-    for produkt in produkty:
+    for produkt in produkty[:10]:
         print(
+            produkt.name,
             produkt.lowest_price()
         )
+        ulubione.dodaj_produkt(produkt)
+
+    print("\nulubione")
+
+    for item in ulubione.produkty:
+        print(item.name)
+
+    ulubione.usun_produkt(produkty[3])
+
+    print("\npo usunieciu")
+
+    for item in ulubione.produkty:
+        print(item.name)
+
+    alarm = Alarm(produkty[3], Decimal("23.11"))
+    alarm.zmien_cene(Decimal("33.1"))
+
+    
+
 
     # app = QApplication(sys.argv)
     # app.setStyle("Fusion")
