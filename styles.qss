@@ -1,162 +1,63 @@
 QWidget {
-    font-family: "Segoe UI", "Arial";
+    font-family: "Segoe UI", Arial;
     font-size: 14px;
     color: #17243b;
 }
 
-QMainWindow, QWidget#Root {
-    background: #f4f7fb;
+#PageTitle {
+    font-size: 26px;
+    font-weight: 700;
 }
 
-QFrame#Header {
-    background: white;
-    border-bottom: 1px solid #e4eaf2;
+#Tile {
+    background-color: #f4f6fb;
+    border: 1px solid #d8dfeb;
+    border-radius: 14px;
 }
 
-QLabel#Logo {
-    color: #2463eb;
-    font-size: 25px;
-    font-weight: 800;
+#Tile:hover {
+    background-color: #e6ecf7;
+    border-color: #9db4d8;
 }
 
-QLabel#Muted {
-    color: #758298;
+#TileTitle {
+    font-size: 18px;
+    font-weight: 700;
 }
 
-QFrame#Hero {
-    background: #eaf1ff;
-    border: 1px solid #d6e4ff;
-    border-radius: 20px;
-}
-
-QLabel#HeroTitle {
-    font-size: 32px;
-    font-weight: 800;
-    color: #17366d;
-}
-
-QLabel#HeroDescription {
-    color: #536b91;
-    font-size: 15px;
-}
-
-QLineEdit, QComboBox {
-    background: white;
-    border: 1px solid #dce3ee;
-    border-radius: 10px;
-    padding: 11px 14px;
-    min-height: 22px;
-}
-
-QLineEdit:focus, QComboBox:focus {
-    border: 1px solid #2463eb;
-}
-
-QComboBox::drop-down {
-    border: none;
-    width: 28px;
-}
-
-QComboBox QAbstractItemView {
-    background: white;
-    selection-background-color: #eaf1ff;
-    selection-color: #17243b;
+#TileSubtitle {
+    color: #5b6779;
 }
 
 QPushButton {
-    background: #2463eb;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 12px 18px;
-    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #c9d3e3;
+    background-color: white;
 }
 
 QPushButton:hover {
-    background: #174fce;
+    background-color: #eef3fb;
 }
 
-QPushButton:pressed {
-    background: #123da2;
-}
 
-QPushButton#Secondary {
-    background: #eaf1ff;
-    color: #2463eb;
-}
-
-QPushButton#Secondary:hover {
-    background: #dbe7ff;
-}
-
-QFrame#ProductCard {
-    background: white;
-    border: 1px solid #e1e7f0;
-    border-radius: 16px;
-}
-
-QFrame#ProductCard:hover {
-    border: 1px solid #a7c3fc;
-}
-
-QLabel#ProductImage {
-    background: #f2f6fc;
+#ProductCard {
+    background-color: white;
+    border: 1px solid #d8dfeb;
     border-radius: 12px;
-    font-size: 58px;
 }
 
-QLabel#ProductTitle {
-    font-size: 17px;
-    font-weight: 700;
+#ProductCard:hover {
+    border-color: #9db4d8;
+    background-color: #f7faff;
 }
 
-QLabel#Price {
-    font-size: 25px;
-    font-weight: 800;
-    color: #17243b;
+#ProductName {
+    font-size: 16px;
+    font-weight: 600;
 }
 
-QLabel#Badge {
-    background: #e8f7ef;
-    color: #21804f;
-    border-radius: 7px;
-    padding: 5px 8px;
-    font-size: 12px;
-}
-
-QLabel#SectionTitle {
-    font-size: 21px;
-    font-weight: 700;
-}
-
-QScrollArea {
-    background: transparent;
-    border: none;
-}
-
-QScrollBar:vertical {
-    background: #f4f7fb;
-    width: 9px;
-    margin: 0;
-}
-
-QScrollBar::handle:vertical {
-    background: #c4cede;
-    border-radius: 4px;
-    min-height: 30px;
-}
-
-QScrollBar::add-line:vertical,
-QScrollBar::sub-line:vertical {
-    height: 0;
-}
-
-QDialog {
-    background: #f4f7fb;
-}
-
-QFrame#Offer {
-    background: white;
-    border: 1px solid #e1e7f0;
-    border-radius: 10px;
+#ProductPrice {
+    font-size: 14px;
+    color: #334155;
 }
