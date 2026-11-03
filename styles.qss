@@ -1,7 +1,7 @@
 QWidget {
     font-family: "Segoe UI", Arial;
     font-size: 14px;
-    color: #17243b;
+    color: black;
 }
 
 #PageTitle {
