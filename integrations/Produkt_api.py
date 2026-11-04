@@ -66,3 +66,18 @@ class ProduktApi:
             produkty.append(produkt)
 
         return produkty
+
+    def pobierz_produkty_count_api(url: str) -> int:
+        response = requests.get(
+            url,
+            headers={"Accept": "application/json"},
+            timeout=(10, 30),
+        )
+        response.raise_for_status()
+        dane = response.json()
+        if not isinstance(dane, dict):
+            raise ValueError("API powinno zwrócić słownik.")
+        if "count" not in dane:
+            raise ValueError("API powinno zwrócić pole 'count'.")
+
+        return int(dane["count"])

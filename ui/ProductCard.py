@@ -1,13 +1,17 @@
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout
 
 from models.Produkt import Produkt
 
 
 class ProductCard(QFrame):
+    details_requested = Signal(object)
+
     def __init__(self, produkt: Produkt, parent=None):
         super().__init__(parent)
 
         self.produkt = produkt
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
 
         self.setObjectName("ProductCard")
         self.setMinimumHeight(110)
@@ -63,3 +67,9 @@ class ProductCard(QFrame):
             return f"{float(value):.2f}"
         except (TypeError, ValueError):
             return "—"
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.details_requested.emit(self.produkt)
+
+        super().mousePressEvent(event)
