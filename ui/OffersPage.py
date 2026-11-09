@@ -37,22 +37,29 @@ class OffersPage(QWidget):
         cards_container = QWidget()
         self.cards_layout = QGridLayout(cards_container)
         self.cards_layout.setSpacing(14)
+        for column in range(3):
+            self.cards_layout.setColumnStretch(column, 1)
 
         self.add_product_cards()
 
         scroll = QScrollArea()
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        scroll.setSizeAdjustPolicy(QScrollArea.SizeAdjustPolicy.AdjustToContents)
         scroll.setWidgetResizable(True)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         scroll.setWidget(cards_container)
 
         self.prev_button = QPushButton("Poprzednia strona")
         self.prev_button.clicked.connect(self.previous)
+        self.prev_button.setEnabled(False)
 
         self.next_button = QPushButton("Następna strona")
         self.next_button.clicked.connect(self.next)
+        self.next_button.setEnabled(True)
 
         self.page_number_label = QLabel("1")
+        #tymczasowo zmieniam kolor na żółty, bo nie widać numeru strony przy ciemnym motywie
+        self.page_number_label.setStyleSheet("color: yellow")
 
         nav_menu_layout = QHBoxLayout()
         nav_menu_layout.addWidget(self.prev_button)
@@ -66,6 +73,7 @@ class OffersPage(QWidget):
         layout.addWidget(quantity_combo)
 
 
+
     def add_product_cards(self):
         products = ProduktApi.pobierz_produkty_api(f"http://127.0.0.1:8000/produkty?&limit={self.__quantity}&offset={self.__offset}")
         row = 0
@@ -73,12 +81,14 @@ class OffersPage(QWidget):
 
         for produkt in products:
             widget = ProductCard(produkt)
+            widget.setObjectName("ProductCard")
             widget.details_requested.connect(self.product_selected.emit)
             self.cards_layout.addWidget(widget, row, col)
             col += 1
             if col == 3:
                 col = 0
                 row += 1
+
 
     def quantity_changed(self, index):
         new_quantity = int(self.sender().itemText(index))
@@ -97,7 +107,13 @@ class OffersPage(QWidget):
                 widget.deleteLater()
 
         self.add_product_cards()
-        # zmień numer strony !!!!!!!!!!!!!!!!!
+        page_number = (self.__offset // int(self.__quantity)) + 1
+        self.page_number_label.setText(str(page_number))
+
+        if self.__offset+int(self.__quantity) >= self.__products_count:
+            self.next_button.setEnabled(False)
+        else:
+            self.next_button.setEnabled(True)
 
     def next(self):
         current_page = int(self.page_number_label.text())

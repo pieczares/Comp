@@ -24,8 +24,8 @@ class ProductCard(QFrame):
         self.name_label.setObjectName("ProductName")
         self.name_label.setWordWrap(True)
 
-        prices_layout = QHBoxLayout()
-        prices_layout.setSpacing(20)
+        prices_layout = QVBoxLayout()
+        # prices_layout.setSpacing(20)
 
         self.cena_netto = QLabel()
         self.cena_brutto = QLabel()

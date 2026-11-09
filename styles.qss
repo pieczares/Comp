@@ -45,6 +45,7 @@ QPushButton:hover {
     background-color: white;
     border: 1px solid #d8dfeb;
     border-radius: 12px;
+    width: 150px;
 }
 
 #ProductCard:hover {
