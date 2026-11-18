@@ -6,3 +6,4 @@ class ProduktWKoszyku:
     EAN: str
     hurtownia: str
     ilosc: int
+    nazwa: str = ""
