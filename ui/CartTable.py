@@ -29,13 +29,29 @@ class CartTable(QTableWidget):
         self.setAlternatingRowColors(True)
         self.setWordWrap(True)
         self.setTextElideMode(Qt.TextElideMode.ElideNone)
-        self.verticalHeader().setVisible(False)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+        vheader = self.verticalHeader()
+        vheader.setVisible(False)
+        vheader.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
         header = self.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         for col in range(2, len(self.COLUMNS)):
             header.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
+        header.sectionResized.connect(self._schedule_row_resize)
+
+    def _schedule_row_resize(self, *args):
+        QTimer.singleShot(0, self.resizeRowsToContents)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._schedule_row_resize()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self._schedule_row_resize()
 
     def _get_price(self, oferta: ProduktWKoszyku) -> Oferta | None:
         key = (oferta.hurtownia, oferta.EAN)
@@ -88,6 +104,7 @@ class CartTable(QTableWidget):
             self.setCellWidget(row, 6, remove_button)
 
         self.resizeRowsToContents()
+        self._schedule_row_resize()
 
     def _schedule_refresh(self):
         QTimer.singleShot(0, self._refresh)
