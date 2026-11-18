@@ -1,6 +1,7 @@
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
     QAbstractItemView, QHeaderView, QPushButton, QTableWidget, QTableWidgetItem,
+    QWidget,
 )
 
 from integrations.Produkt_api import ProduktApi
@@ -15,6 +16,10 @@ class CartTable(QTableWidget):
         "Hurtownia", "Nazwa produktu", "Cena netto",
         "Cena brutto", "Jednostka", "W koszyku", "",
     ]
+    COL_QTY = 5
+    COL_REMOVE = 6
+    MIN_QTY_WIDTH = 170
+    MIN_REMOVE_WIDTH = 90
 
     def __init__(self, koszyk: Koszyk, on_change=None):
         super().__init__()
@@ -38,8 +43,14 @@ class CartTable(QTableWidget):
         header = self.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        for col in range(2, len(self.COLUMNS)):
+        for col in (2, 3, 4):
             header.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
+        # Kolumny z widgetami mają stałą szerokość (ResizeToContents liczyło je
+        # z niespolishowanych widgetów i je zwężało po odświeżeniu).
+        header.setSectionResizeMode(self.COL_QTY, QHeaderView.ResizeMode.Fixed)
+        header.setSectionResizeMode(self.COL_REMOVE, QHeaderView.ResizeMode.Fixed)
+        self.setColumnWidth(self.COL_QTY, self.MIN_QTY_WIDTH)
+        self.setColumnWidth(self.COL_REMOVE, self.MIN_REMOVE_WIDTH)
         header.sectionResized.connect(self._schedule_row_resize)
 
     def _schedule_row_resize(self, *args):
@@ -52,6 +63,15 @@ class CartTable(QTableWidget):
     def showEvent(self, event):
         super().showEvent(event)
         self._schedule_row_resize()
+
+    @staticmethod
+    def _polished_width(widget: QWidget) -> int:
+        for w in [widget, *widget.findChildren(QWidget)]:
+            w.ensurePolished()
+        layout = widget.layout()
+        if layout is not None:
+            layout.activate()
+        return widget.sizeHint().width()
 
     def _get_price(self, oferta: ProduktWKoszyku) -> Oferta | None:
         key = (oferta.hurtownia, oferta.EAN)
@@ -71,6 +91,9 @@ class CartTable(QTableWidget):
         self.setRowCount(len(oferty))
         right = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
+        qty_width = self.MIN_QTY_WIDTH
+        remove_width = self.MIN_REMOVE_WIDTH
+
         for row, oferta in enumerate(oferty):
             cena = self._get_price(oferta)
 
@@ -89,20 +112,22 @@ class CartTable(QTableWidget):
                 self.setItem(row, 3, brutto)
                 self.setItem(row, 4, QTableWidgetItem(cena.jednostka))
 
-            self.setCellWidget(
-                row, 5,
-                QuantityChanger(
-                    self.koszyk, oferta.EAN, oferta.hurtownia,
-                    oferta.nazwa, on_change=self._schedule_refresh,
-                ),
+            changer = QuantityChanger(
+                self.koszyk, oferta.EAN, oferta.hurtownia,
+                oferta.nazwa, on_change=self._schedule_refresh,
             )
+            self.setCellWidget(row, self.COL_QTY, changer)
+            qty_width = max(qty_width, self._polished_width(changer) + 8)
 
             remove_button = QPushButton("Usuń")
             remove_button.clicked.connect(
                 lambda _=False, o=oferta: self.remove_offer(o)
             )
-            self.setCellWidget(row, 6, remove_button)
+            self.setCellWidget(row, self.COL_REMOVE, remove_button)
+            remove_width = max(remove_width, self._polished_width(remove_button) + 8)
 
+        self.setColumnWidth(self.COL_QTY, qty_width)
+        self.setColumnWidth(self.COL_REMOVE, remove_width)
         self.resizeRowsToContents()
         self._schedule_row_resize()
 
