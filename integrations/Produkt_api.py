@@ -41,6 +41,31 @@ class ProduktApi:
 
         return oferty
 
+    @staticmethod
+    def pobierz_cene_api(hurtownia: str, kod: str) -> Oferta:
+        response = requests.get(
+            "http://127.0.0.1:8000/produkty/cena",
+            params={"hurtownia": hurtownia, "kod": kod},
+            headers={"Accept": "application/json"},
+            timeout=(10, 30),
+        )
+        response.raise_for_status()
+        dane = response.json()
+
+        if not isinstance(dane, dict):
+            raise ValueError("API powinno zwrócić obiekt.")
+
+        jednostka = dane["jednostka"]
+        if jednostka not in {"szt", "kg"}:
+            raise ValueError(f"Nieprawidłowa jednostka: {jednostka!r}")
+
+        return Oferta(
+            hurtownia=str(dane["hurtownia"]),
+            cena_netto=Decimal(str(dane["cena_netto"])),
+            cena_brutto=Decimal(str(dane["cena_brutto"])),
+            jednostka=jednostka,
+        )
+
     def pobierz_produkty_api(url: str) ->list[Produkt]:
         response = requests.get(
             url,

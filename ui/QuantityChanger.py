@@ -4,11 +4,13 @@ from models.Koszyk import Koszyk
 
 
 class QuantityChanger(QWidget):
-    def __init__(self, koszyk:Koszyk, EAN:str, hurtownia:str):
+    def __init__(self, koszyk:Koszyk, EAN:str, hurtownia:str, nazwa:str = "", on_change=None):
         super().__init__()
         self.koszyk = koszyk
         self.EAN = EAN
         self.hurtownia = hurtownia
+        self.nazwa = nazwa
+        self.on_change = on_change
 
         cart_layout = QHBoxLayout(self)
 
@@ -31,9 +33,6 @@ class QuantityChanger(QWidget):
         else:
             quantity_label.setText("0")
 
-
-
-
     def change_quantity(self, delta: int, quantity_label: QLabel):
         index = self.koszyk.check_if_offer_exists(self.EAN, self.hurtownia)
         quantity = 0
@@ -44,6 +43,7 @@ class QuantityChanger(QWidget):
         if new_quantity < 0:
             return
 
-        self.koszyk.dodaj_oferte(self.EAN, self.hurtownia, new_quantity)
+        self.koszyk.dodaj_oferte(self.EAN, self.hurtownia, new_quantity, self.nazwa)
         quantity_label.setText(str(new_quantity))
-        # minus_button.setEnabled(new_quantity > 1)
+        if self.on_change:
+            self.on_change()
