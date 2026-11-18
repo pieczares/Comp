@@ -21,8 +21,7 @@ class CartPage(QWidget):
         back_button = QPushButton("Wróć do strony głównej")
         back_button.clicked.connect(lambda: go_to("home"))
 
-
-        self.tabela = CartTable(koszyk=self.koszyk)
+        self.tabela = CartTable(koszyk=self.koszyk, on_change=self._toggle_empty)
 
         layout.addWidget(title)
         layout.addWidget(self.tabela)
@@ -30,11 +29,13 @@ class CartPage(QWidget):
         layout.addStretch()
         layout.addWidget(back_button)
 
+        self.update_cart()
+
+    def _toggle_empty(self):
+        is_empty = len(self.koszyk.get_oferty()) == 0
+        self.empty_label.setVisible(is_empty)
+        self.tabela.setVisible(not is_empty)
+
     def update_cart(self):
-        if len(self.koszyk.get_oferty()) == 0:
-            self.empty_label.show()
-            self.tabela.hide()
-        else:
-            self.empty_label.hide()
-            self.tabela.show()
-            # self.tabela.populate_table()
+        self.tabela.populate_table()
+        self._toggle_empty()

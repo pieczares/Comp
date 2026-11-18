@@ -43,4 +43,4 @@ class ProductDetailsPage(QWidget):
         self.name_label.setText(produkt.name)
         self.ean_label.setText(f"EAN: {produkt.EAN}")
 
-        self.offers_table.set_offers(produkt.offers, produkt.EAN)
+        self.offers_table.set_offers(produkt.offers, produkt.EAN, produkt.name)

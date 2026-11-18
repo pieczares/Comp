@@ -13,7 +13,7 @@ class Koszyk:
                 return index
         return -1
 
-    def dodaj_oferte(self, EAN:str, hurtownia:str, ilosc:int):
+    def dodaj_oferte(self, EAN:str, hurtownia:str, ilosc:int, nazwa:str = ""):
         index = self.check_if_offer_exists(EAN=EAN, hurtownia=hurtownia)
         if index != -1:
             if ilosc <= 0:
@@ -22,7 +22,9 @@ class Koszyk:
             self.__oferty[index].ilosc = ilosc
             return
 
-        self.__oferty.append(ProduktWKoszyku(EAN=EAN, hurtownia=hurtownia, ilosc=ilosc))
+        self.__oferty.append(
+            ProduktWKoszyku(EAN=EAN, hurtownia=hurtownia, ilosc=ilosc, nazwa=nazwa)
+        )
 
     def usun_oferte(self, EAN:str, hurtownia:str):
         index = self.check_if_offer_exists(EAN=EAN, hurtownia=hurtownia)

@@ -40,10 +40,7 @@ class OffersTable(QTableWidget):
                 QHeaderView.ResizeMode.ResizeToContents,
             )
 
-
-
-
-    def set_offers(self, offers: list[Oferta], EAN: str):
+    def set_offers(self, offers: list[Oferta], EAN: str, nazwa: str = ""):
         sorted_offers = sorted(
             offers,
             key=lambda oferta: oferta.cena_brutto,
@@ -77,6 +74,8 @@ class OffersTable(QTableWidget):
             self.setItem(row, 2, brutto)
             self.setItem(row, 3, QTableWidgetItem(oferta.jednostka))
 
-            self.setCellWidget(row, 4, QuantityChanger(self.koszyk, EAN, oferta.hurtownia))
+            self.setCellWidget(
+                row, 4, QuantityChanger(self.koszyk, EAN, oferta.hurtownia, nazwa)
+            )
 
             self.resizeRowToContents(row)

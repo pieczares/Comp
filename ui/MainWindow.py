@@ -13,10 +13,6 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.koszyk = Koszyk([])
-        # Dodanie przykładowych produktów do koszyka
-        self.koszyk.dodaj_oferte(EAN="4024967011608", hurtownia="e-dyskont", ilosc=2)
-        self.koszyk.dodaj_oferte(EAN="4024967011608", hurtownia="hurtownia-spozywcza", ilosc=10)
-
 
         self.setWindowTitle("Sklep")
         self.resize(900, 600)
