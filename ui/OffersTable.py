@@ -1,22 +1,26 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem, QTableWidget
 
+from models.Koszyk import Koszyk
 from models.Oferta import Oferta
+from ui.QuantityChanger import QuantityChanger
 
 
 class OffersTable(QTableWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, koszyk: Koszyk):
+        super().__init__()
+        self.koszyk = koszyk
 
-        self.setColumnCount(4)
+        self.setColumnCount(5)
         self.setHorizontalHeaderLabels([
             "Hurtownia",
             "Cena netto",
             "Cena brutto",
             "Jednostka",
+            "W koszyku",
         ])
 
-        self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers )
+        self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
 
         self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
 
@@ -30,13 +34,16 @@ class OffersTable(QTableWidget):
             0, QHeaderView.ResizeMode.Stretch
         )
 
-        for column in range(1, 4):
+        for column in range(1, 5):
             header.setSectionResizeMode(
                 column,
                 QHeaderView.ResizeMode.ResizeToContents,
             )
 
-    def set_offers(self, offers: list[Oferta]):
+
+
+
+    def set_offers(self, offers: list[Oferta], EAN: str):
         sorted_offers = sorted(
             offers,
             key=lambda oferta: oferta.cena_brutto,
@@ -68,7 +75,8 @@ class OffersTable(QTableWidget):
 
             self.setItem(row, 1, netto)
             self.setItem(row, 2, brutto)
+            self.setItem(row, 3, QTableWidgetItem(oferta.jednostka))
 
-            self.setItem(
-                row, 3, QTableWidgetItem(oferta.jednostka)
-            )
+            self.setCellWidget(row, 4, QuantityChanger(self.koszyk, EAN, oferta.hurtownia))
+
+            self.resizeRowToContents(row)
