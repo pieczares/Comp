@@ -14,22 +14,14 @@ class GeneratorPdf:
     def __kwota(self, wartosc: Decimal) -> str:
         return f"{wartosc:.2f} zł".replace(".", ",")
 
-    def __grupuj(self, koszyk: Koszyk) -> tuple[dict[str, list[ProduktWKoszyku]], list[str]]:
-        """Pobiera ceny i grupuje pozycje koszyka po hurtowniach.
-        Zwraca (sekcje, pominięte pozycje, dla których nie udało się pobrać ceny)."""
+    def __grupuj(self, koszyk: Koszyk) -> dict[str, list[ProduktWKoszyku]]:
+        """Grupuje pozycje koszyka po hurtowniach (ceny są już uzupełnione w ProduktWKoszyku)."""
         sekcje: dict[str, list[ProduktWKoszyku]] = {}
-        pominiete: list[str] = []
 
         for oferta in koszyk.get_oferty():
-            try:
-                oferta.pobierz_ceny()
-            except Exception as e:
-                print(f"Błąd pobierania ceny {oferta.hurtownia}/{oferta.EAN}: {e}")
-                pominiete.append(f"{oferta.nazwa or oferta.EAN} ({oferta.hurtownia})")
-                continue
             sekcje.setdefault(oferta.hurtownia, []).append(oferta)
 
-        return dict(sorted(sekcje.items())), pominiete
+        return dict(sorted(sekcje.items()))
 
     def __zbuduj_html(self, sekcje: dict[str, list[ProduktWKoszyku]]) -> str:
         czesci = [
@@ -82,12 +74,11 @@ class GeneratorPdf:
 
         return "\n".join(czesci)
 
-    def generuj_pdf(self, koszyk: Koszyk, sciezka: str) -> list[str]:
-        """Generuje PDF z zawartości koszyka. Zwraca listę pominiętych pozycji (bez ceny).
-        Rzuca ValueError, gdy nie ma żadnej pozycji z ceną."""
-        sekcje, pominiete = self.__grupuj(koszyk)
+    def generuj_pdf(self, koszyk: Koszyk, sciezka: str) -> None:
+        """Generuje PDF z zawartości koszyka. Rzuca ValueError, gdy koszyk jest pusty."""
+        sekcje = self.__grupuj(koszyk)
         if not sekcje:
-            raise ValueError("Nie udało się pobrać cen żadnego produktu z koszyka.")
+            raise ValueError("Koszyk jest pusty, nie ma czego zapisać na liście.")
 
         writer = QPdfWriter(sciezka)
         writer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
@@ -97,5 +88,3 @@ class GeneratorPdf:
         dokument.setDefaultFont(QFont("Segoe UI", 9))
         dokument.setHtml(self.__zbuduj_html(sekcje))
         dokument.print_(writer)
-
-        return pominiete

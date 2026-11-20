@@ -56,7 +56,7 @@ class CartPage(QWidget):
             sciezka += ".pdf"
 
         try:
-            pominiete = GeneratorPdf().generuj_pdf(koszyk=self.koszyk, sciezka=sciezka)
+            GeneratorPdf().generuj_pdf(koszyk=self.koszyk, sciezka=sciezka)
         except ValueError as e:
             QMessageBox.warning(self, "Lista zakupów", str(e))
             return
@@ -64,7 +64,4 @@ class CartPage(QWidget):
             QMessageBox.critical(self, "Lista zakupów", f"Nie udało się zapisać PDF:\n{e}")
             return
 
-        tekst = f"Lista zakupów została zapisana:\n{sciezka}"
-        if pominiete:
-            tekst += "\n\nPominięto (brak ceny):\n" + "\n".join(pominiete)
-        QMessageBox.information(self, "Lista zakupów", tekst)
+        QMessageBox.information(self, "Lista zakupów", f"Lista zakupów została zapisana:\n{sciezka}")
