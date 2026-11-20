@@ -2,7 +2,7 @@ from PySide6.QtWidgets import (
     QFileDialog, QLabel, QMessageBox, QPushButton, QVBoxLayout, QWidget,
 )
 
-from integrations.ListaZakupowPdf import generuj_pdf
+from integrations.GeneratorPdf import GeneratorPdf
 from models.Koszyk import Koszyk
 from ui.CartTable import CartTable
 
@@ -49,9 +49,7 @@ class CartPage(QWidget):
         self._toggle_empty()
 
     def generate_list(self):
-        sciezka, _ = QFileDialog.getSaveFileName(
-            self, "Zapisz listę zakupów", "lista_zakupow.pdf", "Pliki PDF (*.pdf)"
-        )
+        sciezka, _ = QFileDialog.getSaveFileName(self, "Zapisz listę zakupów", "lista_zakupow.pdf", "Pliki PDF (*.pdf)")
         if not sciezka:
             return
         if not sciezka.lower().endswith(".pdf"):
@@ -66,7 +64,7 @@ class CartPage(QWidget):
             return
 
         try:
-            generuj_pdf(sekcje, sciezka)
+            GeneratorPdf().generuj_pdf(sekcje=sekcje, sciezka=sciezka)
         except Exception as e:
             QMessageBox.critical(self, "Lista zakupów", f"Nie udało się zapisać PDF:\n{e}")
             return

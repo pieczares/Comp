@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from integrations.ListaZakupowPdf import PozycjaListy
+from integrations.GeneratorPdf import PozycjaListy
 from integrations.Produkt_api import ProduktApi
 from models.Koszyk import Koszyk
 from models.Oferta import Oferta
@@ -84,36 +84,21 @@ class CartTable(QTableWidget):
         widget.setMinimumSize(hint)
         return hint.width(), hint.height()
 
-    def _get_price(self, oferta: ProduktWKoszyku) -> Oferta | None:
-        key = (oferta.hurtownia, oferta.EAN)
-        if key not in self._cache:
-            try:
-                self._cache[key] = ProduktApi.pobierz_cene_api(
-                    oferta.hurtownia, oferta.EAN
-                )
-            except Exception as e:
-                print(f"Błąd pobierania ceny {key}: {e}")
-                return None
-        return self._cache[key]
-
     def pobierz_sekcje(self) -> tuple[dict[str, list[PozycjaListy]], list[str]]:
         """Grupuje koszyk po hurtowniach. Zwraca (sekcje, pominięte pozycje bez ceny)."""
         sekcje: dict[str, list[PozycjaListy]] = {}
         pominiete: list[str] = []
 
         for oferta in self.koszyk.get_oferty():
-            cena = self._get_price(oferta)
-            if cena is None:
-                pominiete.append(f"{oferta.nazwa or oferta.EAN} ({oferta.hurtownia})")
-                continue
+            oferta.pobierz_ceny()
             sekcje.setdefault(oferta.hurtownia, []).append(
                 PozycjaListy(
                     kod=oferta.EAN,
                     nazwa=oferta.nazwa or oferta.EAN,
-                    cena_netto=cena.cena_netto,
-                    cena_brutto=cena.cena_brutto,
+                    cena_netto=oferta.cena_netto,
+                    cena_brutto=oferta.cena_brutto,
                     ilosc=oferta.ilosc,
-                    jednostka=cena.jednostka,
+                    jednostka=oferta.jednostka,
                 )
             )
 
@@ -129,22 +114,17 @@ class CartTable(QTableWidget):
         remove_width = 90
 
         for row, oferta in enumerate(oferty):
-            cena = self._get_price(oferta)
 
             self.setItem(row, 0, QTableWidgetItem(oferta.hurtownia))
             self.setItem(row, 1, QTableWidgetItem(oferta.nazwa or oferta.EAN))
 
-            if cena is None:
-                for col in (2, 3, 4):
-                    self.setItem(row, col, QTableWidgetItem("—"))
-            else:
-                netto = QTableWidgetItem(f"{cena.cena_netto:.2f} zł")
-                brutto = QTableWidgetItem(f"{cena.cena_brutto:.2f} zł")
-                netto.setTextAlignment(right)
-                brutto.setTextAlignment(right)
-                self.setItem(row, 2, netto)
-                self.setItem(row, 3, brutto)
-                self.setItem(row, 4, QTableWidgetItem(cena.jednostka))
+            netto = QTableWidgetItem(f"{oferta.cena_netto:.2f} zł")
+            brutto = QTableWidgetItem(f"{oferta.cena_brutto:.2f} zł")
+            netto.setTextAlignment(right)
+            brutto.setTextAlignment(right)
+            self.setItem(row, 2, netto)
+            self.setItem(row, 3, brutto)
+            self.setItem(row, 4, QTableWidgetItem(oferta.jednostka))
 
             changer = QuantityChanger(
                 self.koszyk, oferta.EAN, oferta.hurtownia,
