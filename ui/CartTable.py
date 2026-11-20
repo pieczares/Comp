@@ -4,9 +4,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from integrations.Produkt_api import ProduktApi
 from models.Koszyk import Koszyk
-from models.Oferta import Oferta
 from models.ProduktWKoszyku import ProduktWKoszyku
 from ui.QuantityChanger import QuantityChanger
 
@@ -24,7 +22,6 @@ class CartTable(QTableWidget):
         super().__init__()
         self.koszyk = koszyk
         self.on_change = on_change
-        self._cache: dict[tuple[str, str], Oferta] = {}
 
         self.setColumnCount(len(self.COLUMNS))
         self.setHorizontalHeaderLabels(self.COLUMNS)
@@ -93,6 +90,8 @@ class CartTable(QTableWidget):
         remove_width = 90
 
         for row, oferta in enumerate(oferty):
+
+            oferta.pobierz_ceny()
 
             self.setItem(row, 0, QTableWidgetItem(oferta.hurtownia))
             self.setItem(row, 1, QTableWidgetItem(oferta.nazwa or oferta.EAN))
