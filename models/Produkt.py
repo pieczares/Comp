@@ -14,7 +14,7 @@ class Produkt:
     def __get_offers(self)-> list[Oferta]:
         #import jest tutaj aby uniknąć pętli czy coś takiego
         from integrations.Produkt_api import ProduktApi
-        return ProduktApi.pobierz_oferty_api(f"http://127.0.0.1:8000/produkty/oferta?kod={self.EAN}")
+        return ProduktApi().pobierz_oferty_api(kod=self.EAN)
 
     def lowest_price(self) -> Oferta | None:
         return min(

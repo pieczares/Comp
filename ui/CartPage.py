@@ -1,5 +1,8 @@
-from PySide6.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QFileDialog, QLabel, QMessageBox, QPushButton, QVBoxLayout, QWidget,
+)
 
+from integrations.GeneratorPdf import GeneratorPdf
 from models.Koszyk import Koszyk
 from ui.CartTable import CartTable
 
@@ -18,6 +21,9 @@ class CartPage(QWidget):
 
         self.empty_label = QLabel("Koszyk jest pusty.")
 
+        self.generate_button = QPushButton("Generuj listę")
+        self.generate_button.clicked.connect(self.generate_list)
+
         back_button = QPushButton("Wróć do strony głównej")
         back_button.clicked.connect(lambda: go_to("home"))
 
@@ -26,6 +32,7 @@ class CartPage(QWidget):
         layout.addWidget(title)
         layout.addWidget(self.tabela)
         layout.addWidget(self.empty_label)
+        layout.addWidget(self.generate_button)
         layout.addStretch()
         layout.addWidget(back_button)
 
@@ -35,7 +42,26 @@ class CartPage(QWidget):
         is_empty = len(self.koszyk.get_oferty()) == 0
         self.empty_label.setVisible(is_empty)
         self.tabela.setVisible(not is_empty)
+        self.generate_button.setVisible(not is_empty)
 
     def update_cart(self):
         self.tabela.populate_table()
         self._toggle_empty()
+
+    def generate_list(self):
+        sciezka, _ = QFileDialog.getSaveFileName(self, "Zapisz listę zakupów", "lista_zakupow.pdf", "Pliki PDF (*.pdf)")
+        if not sciezka:
+            return
+        if not sciezka.lower().endswith(".pdf"):
+            sciezka += ".pdf"
+
+        try:
+            GeneratorPdf().generuj_pdf(koszyk=self.koszyk, sciezka=sciezka)
+        except ValueError as e:
+            QMessageBox.warning(self, "Lista zakupów", str(e))
+            return
+        except Exception as e:
+            QMessageBox.critical(self, "Lista zakupów", f"Nie udało się zapisać PDF:\n{e}")
+            return
+
+        QMessageBox.information(self, "Lista zakupów", f"Lista zakupów została zapisana:\n{sciezka}")
