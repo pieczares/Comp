@@ -14,7 +14,7 @@ class OffersPage(QWidget):
         super().__init__()
         self.__quantity = "20"
         self.__offset = 0
-        self.__products_count: Final[int] = ProduktApi.pobierz_produkty_count_api("http://127.0.0.1:8000/produkty/count")
+        self.__products_count: Final[int] = ProduktApi().pobierz_produkty_count_api()
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(40, 40, 40, 40)
@@ -75,7 +75,7 @@ class OffersPage(QWidget):
 
 
     def add_product_cards(self):
-        products = ProduktApi.pobierz_produkty_api(f"http://127.0.0.1:8000/produkty?&limit={self.__quantity}&offset={self.__offset}")
+        products = ProduktApi().pobierz_produkty_api(limit=self.__quantity, offset=self.__offset)
         row = 0
         col = 0
 

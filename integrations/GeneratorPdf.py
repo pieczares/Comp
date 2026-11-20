@@ -15,7 +15,6 @@ class GeneratorPdf:
         return f"{wartosc:.2f} zł".replace(".", ",")
 
     def __grupuj(self, koszyk: Koszyk) -> dict[str, list[ProduktWKoszyku]]:
-        """Grupuje pozycje koszyka po hurtowniach (ceny są już uzupełnione w ProduktWKoszyku)."""
         sekcje: dict[str, list[ProduktWKoszyku]] = {}
 
         for oferta in koszyk.get_oferty():
@@ -75,7 +74,6 @@ class GeneratorPdf:
         return "\n".join(czesci)
 
     def generuj_pdf(self, koszyk: Koszyk, sciezka: str) -> None:
-        """Generuje PDF z zawartości koszyka. Rzuca ValueError, gdy koszyk jest pusty."""
         sekcje = self.__grupuj(koszyk)
         if not sekcje:
             raise ValueError("Koszyk jest pusty, nie ma czego zapisać na liście.")

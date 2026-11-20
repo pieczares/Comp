@@ -1,4 +1,5 @@
 from decimal import Decimal
+from urllib.parse import urlencode
 
 import requests
 
@@ -7,7 +8,14 @@ from models.Oferta import Oferta
 
 class ProduktApi:
 
-    def pobierz_oferty_api(url: str) -> list[Oferta]:
+
+    def pobierz_oferty_api(self, hurtownia_id=None, kod=None) -> list[Oferta]:
+
+        url = f"http://127.0.0.1:8000/produkty/oferta"
+        params = {"hurtownia_id": hurtownia_id, "kod": kod}
+        params = {k: v for k, v in params.items() if v is not None}
+        url = f"{url}?{urlencode(params)}" if params else url
+
         response = requests.get(
             url,
             headers={"Accept": "application/json"},
@@ -41,8 +49,7 @@ class ProduktApi:
 
         return oferty
 
-    @staticmethod
-    def pobierz_cene_api(hurtownia: str, kod: str) -> Oferta:
+    def pobierz_cene_api(self, hurtownia: str, kod: str) -> Oferta:
         response = requests.get(
             "http://127.0.0.1:8000/produkty/cena",
             params={"hurtownia": hurtownia, "kod": kod},
@@ -66,7 +73,14 @@ class ProduktApi:
             jednostka=jednostka,
         )
 
-    def pobierz_produkty_api(url: str) ->list[Produkt]:
+    def pobierz_produkty_api(self, kod=None, limit=None, offset=None) ->list[Produkt]:
+
+        url = "http://127.0.0.1:8000/produkty"
+
+        params = {"kod": kod, "limit": limit, "offset": offset}
+        params = {k: v for k, v in params.items() if v is not None}
+        url = f"{url}?{urlencode(params)}" if params else url
+
         response = requests.get(
             url,
             headers={"Accept": "application/json"},
@@ -92,9 +106,9 @@ class ProduktApi:
 
         return produkty
 
-    def pobierz_produkty_count_api(url: str) -> int:
+    def pobierz_produkty_count_api(self) -> int:
         response = requests.get(
-            url,
+            "http://127.0.0.1:8000/produkty/count",
             headers={"Accept": "application/json"},
             timeout=(10, 30),
         )
