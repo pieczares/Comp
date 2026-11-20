@@ -55,16 +55,11 @@ class CartPage(QWidget):
         if not sciezka.lower().endswith(".pdf"):
             sciezka += ".pdf"
 
-        sekcje, pominiete = self.tabela.pobierz_sekcje()
-        if not sekcje:
-            QMessageBox.warning(
-                self, "Lista zakupów",
-                "Nie udało się pobrać cen żadnego produktu, lista nie została wygenerowana.",
-            )
-            return
-
         try:
-            GeneratorPdf().generuj_pdf(sekcje=sekcje, sciezka=sciezka)
+            pominiete = GeneratorPdf().generuj_pdf(koszyk=self.koszyk, sciezka=sciezka)
+        except ValueError as e:
+            QMessageBox.warning(self, "Lista zakupów", str(e))
+            return
         except Exception as e:
             QMessageBox.critical(self, "Lista zakupów", f"Nie udało się zapisać PDF:\n{e}")
             return

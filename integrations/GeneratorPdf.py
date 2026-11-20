@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from html import escape
@@ -6,14 +5,33 @@ from html import escape
 from PySide6.QtCore import QMarginsF
 from PySide6.QtGui import QFont, QPageLayout, QPageSize, QPdfWriter, QTextDocument
 
-from models.PozycjaListy import PozycjaListy
+from models.Koszyk import Koszyk
+from models.ProduktWKoszyku import ProduktWKoszyku
+
 
 class GeneratorPdf:
 
     def __kwota(self, wartosc: Decimal) -> str:
         return f"{wartosc:.2f} zł".replace(".", ",")
 
-    def __zbuduj_html(self, sekcje: dict[str, list[PozycjaListy]]) -> str:
+    def __grupuj(self, koszyk: Koszyk) -> tuple[dict[str, list[ProduktWKoszyku]], list[str]]:
+        """Pobiera ceny i grupuje pozycje koszyka po hurtowniach.
+        Zwraca (sekcje, pominięte pozycje, dla których nie udało się pobrać ceny)."""
+        sekcje: dict[str, list[ProduktWKoszyku]] = {}
+        pominiete: list[str] = []
+
+        for oferta in koszyk.get_oferty():
+            try:
+                oferta.pobierz_ceny()
+            except Exception as e:
+                print(f"Błąd pobierania ceny {oferta.hurtownia}/{oferta.EAN}: {e}")
+                pominiete.append(f"{oferta.nazwa or oferta.EAN} ({oferta.hurtownia})")
+                continue
+            sekcje.setdefault(oferta.hurtownia, []).append(oferta)
+
+        return dict(sorted(sekcje.items())), pominiete
+
+    def __zbuduj_html(self, sekcje: dict[str, list[ProduktWKoszyku]]) -> str:
         czesci = [
             "<h1>Lista zakupów</h1>",
             f"<p>Data: {datetime.now():%d.%m.%Y}</p>",
@@ -46,8 +64,8 @@ class GeneratorPdf:
                 suma_brutto += wiersz_brutto
                 czesci.append(
                     "<tr>"
-                    f"<td>{escape(p.kod)}</td>"
-                    f"<td>{escape(p.nazwa)}</td>"
+                    f"<td>{escape(p.EAN)}</td>"
+                    f"<td>{escape(p.nazwa or p.EAN)}</td>"
                     f'<td align="right">{self.__kwota(p.cena_netto)}</td>'
                     f'<td align="right">{self.__kwota(p.cena_brutto)}</td>'
                     f'<td align="right">{p.ilosc} {escape(p.jednostka)}</td>'
@@ -64,7 +82,13 @@ class GeneratorPdf:
 
         return "\n".join(czesci)
 
-    def generuj_pdf(self, sekcje: dict[str, list[PozycjaListy]], sciezka: str) -> None:
+    def generuj_pdf(self, koszyk: Koszyk, sciezka: str) -> list[str]:
+        """Generuje PDF z zawartości koszyka. Zwraca listę pominiętych pozycji (bez ceny).
+        Rzuca ValueError, gdy nie ma żadnej pozycji z ceną."""
+        sekcje, pominiete = self.__grupuj(koszyk)
+        if not sekcje:
+            raise ValueError("Nie udało się pobrać cen żadnego produktu z koszyka.")
+
         writer = QPdfWriter(sciezka)
         writer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
         writer.setPageMargins(QMarginsF(15, 15, 15, 15), QPageLayout.Unit.Millimeter)
@@ -73,3 +97,5 @@ class GeneratorPdf:
         dokument.setDefaultFont(QFont("Segoe UI", 9))
         dokument.setHtml(self.__zbuduj_html(sekcje))
         dokument.print_(writer)
+
+        return pominiete
