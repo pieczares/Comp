@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from integrations.ListaZakupowPdf import PozycjaListy
 from integrations.Produkt_api import ProduktApi
 from models.Koszyk import Koszyk
 from models.Oferta import Oferta
@@ -94,6 +95,29 @@ class CartTable(QTableWidget):
                 print(f"Błąd pobierania ceny {key}: {e}")
                 return None
         return self._cache[key]
+
+    def pobierz_sekcje(self) -> tuple[dict[str, list[PozycjaListy]], list[str]]:
+        """Grupuje koszyk po hurtowniach. Zwraca (sekcje, pominięte pozycje bez ceny)."""
+        sekcje: dict[str, list[PozycjaListy]] = {}
+        pominiete: list[str] = []
+
+        for oferta in self.koszyk.get_oferty():
+            cena = self._get_price(oferta)
+            if cena is None:
+                pominiete.append(f"{oferta.nazwa or oferta.EAN} ({oferta.hurtownia})")
+                continue
+            sekcje.setdefault(oferta.hurtownia, []).append(
+                PozycjaListy(
+                    kod=oferta.EAN,
+                    nazwa=oferta.nazwa or oferta.EAN,
+                    cena_netto=cena.cena_netto,
+                    cena_brutto=cena.cena_brutto,
+                    ilosc=oferta.ilosc,
+                    jednostka=cena.jednostka,
+                )
+            )
+
+        return dict(sorted(sekcje.items())), pominiete
 
     def populate_table(self):
         oferty = list(self.koszyk.get_oferty())
