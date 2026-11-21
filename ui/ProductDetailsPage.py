@@ -3,14 +3,16 @@ from PySide6.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget
 
 from models.Koszyk import Koszyk
 from models.Produkt import Produkt
+from models.Ulubione import Ulubione
 from ui.OffersTable import OffersTable
 
 
 class ProductDetailsPage(QWidget):
 
-    def __init__(self, go_to, koszyk: Koszyk):
+    def __init__(self, go_to, koszyk: Koszyk, ulubione:Ulubione):
         super().__init__()
         self.koszyk = koszyk
+        self.ulubione = ulubione
 
         self.produkt: Produkt | None = None
 

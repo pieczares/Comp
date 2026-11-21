@@ -4,14 +4,17 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget, QScrollArea, QGridLayout, QComboBox, \
     QHBoxLayout
 from integrations.Produkt_api import ProduktApi
+from models.Ulubione import Ulubione
 from ui.ProductCard import ProductCard
 
 
 class OffersPage(QWidget):
     product_selected = Signal(object)
 
-    def __init__(self, go_to):
+    def __init__(self, ulubione:Ulubione, go_to):
         super().__init__()
+        self.ulubione = ulubione
+
         self.__quantity = "20"
         self.__offset = 0
         self.__products_count: Final[int] = ProduktApi().pobierz_produkty_count_api()

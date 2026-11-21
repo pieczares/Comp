@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QMainWindow, QStackedWidget
 
 from models.Koszyk import Koszyk
 from models.Produkt import Produkt
+from models.Ulubione import Ulubione
 from ui.HomePage import HomePage
 from ui.OffersPage import OffersPage
 from ui.CartPage import CartPage
@@ -13,6 +14,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.koszyk = Koszyk([])
+        self.ulubione = Ulubione()
 
         self.setWindowTitle("Sklep")
         self.resize(900, 600)
@@ -21,10 +23,10 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.stack)
 
         self.home_page = HomePage(self.go_to)
-        self.offers_page = OffersPage(self.go_to)
+        self.offers_page = OffersPage(self.ulubione, self.go_to)
         self.cart_page = CartPage(self.go_to, self.koszyk)
-        self.favorites_page = FavoritesPage(self.go_to)
-        self.product_details_page = ProductDetailsPage(self.go_to, self.koszyk)
+        self.favorites_page = FavoritesPage(self.go_to, self.ulubione)
+        self.product_details_page = ProductDetailsPage(self.go_to, self.koszyk, self.ulubione)
 
         self.offers_page.product_selected.connect(self.show_product_details)
 

@@ -1,8 +1,10 @@
 from PySide6.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget
 
+from models.Ulubione import Ulubione
+
 
 class FavoritesPage(QWidget):
-    def __init__(self, go_to):
+    def __init__(self, go_to, ulubione:Ulubione):
         super().__init__()
 
         layout = QVBoxLayout(self)
