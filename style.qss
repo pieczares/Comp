@@ -1,0 +1,15 @@
+#FavoriteButton {
+    border: none;
+    background: transparent;
+    padding: 0;
+    font-size: 30px;
+    color: #e0245e;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+#FavoriteButton:hover {
+    background: transparent;
+}

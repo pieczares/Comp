@@ -2,12 +2,14 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout
 
 from models.Produkt import Produkt
+from models.Ulubione import Ulubione
+from ui.FavoriteButton import FavoriteButton
 
 
 class ProductCard(QFrame):
     details_requested = Signal(object)
 
-    def __init__(self, produkt: Produkt, parent=None):
+    def __init__(self, produkt: Produkt, ulubione: Ulubione, parent=None):
         super().__init__(parent)
 
         self.produkt = produkt
@@ -24,6 +26,14 @@ class ProductCard(QFrame):
         self.name_label.setObjectName("ProductName")
         self.name_label.setWordWrap(True)
 
+        self.favorite_button = FavoriteButton(ulubione, produkt)
+
+        header_layout = QHBoxLayout()
+        header_layout.addWidget(self.name_label, 1)
+        header_layout.addWidget(
+            self.favorite_button, 0, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight
+        )
+
         prices_layout = QVBoxLayout()
         # prices_layout.setSpacing(20)
 
@@ -37,7 +47,7 @@ class ProductCard(QFrame):
         prices_layout.addWidget(self.cena_brutto)
         prices_layout.addStretch()
 
-        layout.addWidget(self.name_label)
+        layout.addLayout(header_layout)
         layout.addLayout(prices_layout)
 
         self.refresh()

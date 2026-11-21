@@ -83,7 +83,7 @@ class OffersPage(QWidget):
         col = 0
 
         for produkt in products:
-            widget = ProductCard(produkt)
+            widget = ProductCard(produkt, self.ulubione)
             widget.setObjectName("ProductCard")
             widget.details_requested.connect(self.product_selected.emit)
             self.cards_layout.addWidget(widget, row, col)
