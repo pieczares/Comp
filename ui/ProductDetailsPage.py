@@ -1,9 +1,10 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from models.Koszyk import Koszyk
 from models.Produkt import Produkt
 from models.Ulubione import Ulubione
+from ui.FavoriteButton import FavoriteButton
 from ui.OffersTable import OffersTable
 
 
@@ -24,9 +25,16 @@ class ProductDetailsPage(QWidget):
         self.name_label.setObjectName("PageTitle")
         self.name_label.setWordWrap(True)
 
+        self.favorite_button = FavoriteButton(self.ulubione)
+
+        header_layout = QHBoxLayout()
+        header_layout.addWidget(self.name_label, 1)
+        header_layout.addWidget(
+            self.favorite_button, 0, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight
+        )
+
         self.ean_label = QLabel()
 
-        # Nazwa produktu i EAN mają być zwykłym tekstem.
         self.name_label.setTextFormat(Qt.TextFormat.PlainText)
         self.ean_label.setTextFormat(Qt.TextFormat.PlainText)
 
@@ -35,7 +43,7 @@ class ProductDetailsPage(QWidget):
         back_button = QPushButton("Wróć do oferty")
         back_button.clicked.connect(lambda : go_to("offers"))
 
-        layout.addWidget(self.name_label)
+        layout.addLayout(header_layout)
         layout.addWidget(self.ean_label)
         layout.addWidget(self.offers_table)
         layout.addWidget(back_button)
@@ -46,3 +54,4 @@ class ProductDetailsPage(QWidget):
         self.ean_label.setText(f"EAN: {produkt.EAN}")
 
         self.offers_table.set_offers(produkt.offers, produkt.EAN, produkt.name)
+        self.favorite_button.set_produkt(produkt)
