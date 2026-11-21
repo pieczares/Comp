@@ -35,7 +35,6 @@ class ProductDetailsPage(QWidget):
 
         self.ean_label = QLabel()
 
-        # Nazwa produktu i EAN mają być zwykłym tekstem.
         self.name_label.setTextFormat(Qt.TextFormat.PlainText)
         self.ean_label.setTextFormat(Qt.TextFormat.PlainText)
 

@@ -14,7 +14,6 @@ class FavoriteButton(QPushButton):
         self.ulubione = ulubione
         self.produkt = produkt
 
-        # Wygląd przycisku jest zdefiniowany w style.qss (#FavoriteButton).
         self.setObjectName("FavoriteButton")
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.clicked.connect(self.toggle)
@@ -50,5 +49,4 @@ class FavoriteButton(QPushButton):
 
     def showEvent(self, event):
         super().showEvent(event)
-        # Stan mógł się zmienić na innej stronie (np. szczegóły produktu).
         self.update_state()
