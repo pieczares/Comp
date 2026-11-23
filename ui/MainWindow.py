@@ -1,3 +1,5 @@
+import pickle
+
 from PySide6.QtWidgets import QMainWindow, QStackedWidget
 
 from models.Koszyk import Koszyk
@@ -11,10 +13,10 @@ from ui.ProductDetailsPage import ProductDetailsPage
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, koszyk: Koszyk, ulubione: Ulubione):
         super().__init__()
-        self.koszyk = Koszyk([])
-        self.ulubione = Ulubione()
+        self.koszyk = koszyk
+        self.ulubione = ulubione
 
         self.setWindowTitle("Sklep")
         self.resize(900, 600)
@@ -57,3 +59,10 @@ class MainWindow(QMainWindow):
     def show_product_details(self, produkt: Produkt):
         self.product_details_page.set_product(produkt)
         self.stack.setCurrentWidget(self.product_details_page)
+
+    def closeEvent(self, event):
+        with open("ulubione.pkl", "wb") as f:
+            pickle.dump(self.ulubione, f)
+        with open("koszyk.pkl", "wb") as f:
+            pickle.dump(self.koszyk, f)
+        super().closeEvent(event)

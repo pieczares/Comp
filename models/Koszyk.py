@@ -3,9 +3,14 @@ from dataclasses import dataclass
 from models.ProduktWKoszyku import ProduktWKoszyku
 
 
-@dataclass
 class Koszyk:
     __oferty: list[ProduktWKoszyku]
+
+    def __init__(self, oferty=None):
+        if oferty is None:
+            oferty = []
+        self.__oferty = oferty
+
 
     def check_if_offer_exists(self, EAN:str, hurtownia:str) -> int:
         for index, item in enumerate(iterable=self.__oferty, start=0):
