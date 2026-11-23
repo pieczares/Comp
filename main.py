@@ -12,11 +12,15 @@ STYLE_FILES = ("styles.qss", "style.qss")
 KOSZYK = Path("koszyk.pkl")
 ULUBIONE = Path("ulubione.pkl")
 
-def wczytaj(PLIK: Path, domyslny):
-    if PLIK.exists():
-        with open(PLIK, "rb") as f:
+def wczytaj(plik: Path, domyslny):
+    if plik.exists():
+        with open(plik, "rb") as f:
             return pickle.load(f)
     return domyslny
+
+def zapisz(plik:Path ,obj):
+    with open(plik, "wb") as f:
+        pickle.dump(obj, f)
 
 def main():
     app = QApplication(sys.argv)
@@ -30,10 +34,17 @@ def main():
 
 
     koszyk = wczytaj(KOSZYK, Koszyk())
-    lubione = wczytaj(ULUBIONE, Ulubione())
+    ulubione = wczytaj(ULUBIONE, Ulubione())
 
-    window = MainWindow(koszyk=koszyk, ulubione=lubione)
+    window = MainWindow(koszyk=koszyk, ulubione=ulubione)
     window.show()
+
+    def przy_wyjsciu():
+        zapisz(KOSZYK, koszyk)
+        zapisz(ULUBIONE, ulubione)
+
+    app.aboutToQuit.connect(przy_wyjsciu)
+
     sys.exit(app.exec())
 
 

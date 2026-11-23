@@ -59,10 +59,3 @@ class MainWindow(QMainWindow):
     def show_product_details(self, produkt: Produkt):
         self.product_details_page.set_product(produkt)
         self.stack.setCurrentWidget(self.product_details_page)
-
-    def closeEvent(self, event):
-        with open("ulubione.pkl", "wb") as f:
-            pickle.dump(self.ulubione, f)
-        with open("koszyk.pkl", "wb") as f:
-            pickle.dump(self.koszyk, f)
-        super().closeEvent(event)
