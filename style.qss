@@ -9,3 +9,8 @@
     min-height: 40px;
     max-height: 40px;
 }
+
+#ErrorLabel {
+    color: #ff6b6b;
+    font-weight: bold;
+}

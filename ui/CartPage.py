@@ -1,3 +1,4 @@
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QFileDialog, QLabel, QMessageBox, QPushButton, QVBoxLayout, QWidget,
 )
@@ -19,6 +20,12 @@ class CartPage(QWidget):
         title = QLabel("Koszyk")
         title.setObjectName("PageTitle")
 
+        self.error_label = QLabel()
+        self.error_label.setObjectName("ErrorLabel")
+        self.error_label.setTextFormat(Qt.TextFormat.PlainText)
+        self.error_label.setWordWrap(True)
+        self.error_label.hide()
+
         self.empty_label = QLabel("Koszyk jest pusty.")
 
         self.generate_button = QPushButton("Generuj listę")
@@ -30,6 +37,7 @@ class CartPage(QWidget):
         self.tabela = CartTable(koszyk=self.koszyk, on_change=self._toggle_empty)
 
         layout.addWidget(title)
+        layout.addWidget(self.error_label)
         layout.addWidget(self.tabela)
         layout.addWidget(self.empty_label)
         layout.addWidget(self.generate_button)
@@ -43,6 +51,13 @@ class CartPage(QWidget):
         self.empty_label.setVisible(is_empty)
         self.tabela.setVisible(not is_empty)
         self.generate_button.setVisible(not is_empty)
+
+        blad = self.tabela.error_message
+        if blad:
+            self.error_label.setText(f"Nie udało się pobrać aktualnych cen: {blad}")
+        self.error_label.setVisible(bool(blad))
+        # Bez aktualnych cen nie generujemy listy zakupów.
+        self.generate_button.setEnabled(not blad)
 
     def update_cart(self):
         self.tabela.populate_table()

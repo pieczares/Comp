@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from integrations.Produkt_api import BladApi
 from models.Koszyk import Koszyk
 from models.ProduktWKoszyku import ProduktWKoszyku
 from ui.QuantityChanger import QuantityChanger
@@ -22,6 +23,8 @@ class CartTable(QTableWidget):
         super().__init__()
         self.koszyk = koszyk
         self.on_change = on_change
+        # Komunikat o ostatnim błędzie pobierania cen (None = wszystko w porządku).
+        self.error_message: str | None = None
 
         self.setColumnCount(len(self.COLUMNS))
         self.setHorizontalHeaderLabels(self.COLUMNS)
@@ -89,20 +92,28 @@ class CartTable(QTableWidget):
         qty_width = 170
         remove_width = 90
 
+        self.error_message = None
+
         for row, oferta in enumerate(oferty):
 
-            oferta.pobierz_ceny()
+            # Po pierwszym błędzie nie pytamy serwera dalej (unikamy wielu timeoutów).
+            if self.error_message is None:
+                try:
+                    oferta.pobierz_ceny()
+                except BladApi as e:
+                    self.error_message = str(e)
+            ceny_ok = self.error_message is None
 
             self.setItem(row, 0, QTableWidgetItem(oferta.hurtownia))
             self.setItem(row, 1, QTableWidgetItem(oferta.nazwa or oferta.EAN))
 
-            netto = QTableWidgetItem(f"{oferta.cena_netto:.2f} zł")
-            brutto = QTableWidgetItem(f"{oferta.cena_brutto:.2f} zł")
+            netto = QTableWidgetItem(f"{oferta.cena_netto:.2f} zł" if ceny_ok else "—")
+            brutto = QTableWidgetItem(f"{oferta.cena_brutto:.2f} zł" if ceny_ok else "—")
             netto.setTextAlignment(right)
             brutto.setTextAlignment(right)
             self.setItem(row, 2, netto)
             self.setItem(row, 3, brutto)
-            self.setItem(row, 4, QTableWidgetItem(oferta.jednostka))
+            self.setItem(row, 4, QTableWidgetItem(oferta.jednostka if ceny_ok else "—"))
 
             changer = QuantityChanger(
                 self.koszyk, oferta.EAN, oferta.hurtownia,
