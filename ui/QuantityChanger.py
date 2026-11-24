@@ -18,7 +18,7 @@ class QuantityChanger(QWidget):
 
         minus_button = QPushButton("-")
         minus_button.clicked.connect(lambda: self._set_quantity(self._current_quantity() - 1))
-        minus_button.setProperty("class", "QuantityButton")
+        minus_button.setObjectName("QuantityButton")
         cart_layout.addWidget(minus_button)
 
         self.quantity_input = QLineEdit()
@@ -31,7 +31,7 @@ class QuantityChanger(QWidget):
 
         plus_button = QPushButton("+")
         plus_button.clicked.connect(lambda: self._set_quantity(self._current_quantity() + 1))
-        plus_button.setProperty("class", "QuantityButton")
+        plus_button.setObjectName("QuantityButton")
         cart_layout.addWidget(plus_button)
 
     def _current_quantity(self) -> int:

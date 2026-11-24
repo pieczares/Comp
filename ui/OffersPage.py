@@ -12,7 +12,7 @@ class OffersPage(QWidget):
     product_selected = Signal(object)
 
     # Ile szkieletów kart pokazujemy w trakcie ładowania.
-    PLACEHOLDER_COUNT = 12
+    PLACEHOLDER_COUNT = 20
 
     def __init__(self, ulubione:Ulubione, go_to):
         super().__init__()
@@ -24,11 +24,9 @@ class OffersPage(QWidget):
         self.__loading = False
         self.__loader: ProductsLoader | None = None
 
-        # Liczba produktów pobierana przy inicjalizacji.
         try:
             self.__products_count: int | None = ProduktApi().pobierz_produkty_count_api()
         except BladApi:
-            # Serwer niedostępny przy starcie - liczbę pobierze pierwsze ładowanie strony.
             self.__products_count = None
 
         layout = QVBoxLayout(self)

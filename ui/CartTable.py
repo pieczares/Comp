@@ -138,6 +138,7 @@ class CartTable(QTableWidget):
             self.setCellWidget(row, self.COL_QTY, changer)
 
             remove_button = QPushButton("Usuń")
+            remove_button.setObjectName("QuantityButton")
             remove_button.clicked.connect(
                 lambda _=False, o=oferta: self.remove_offer(o)
             )
