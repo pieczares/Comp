@@ -4,10 +4,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from integrations.Produkt_api import BladApi
+from integrations.Produkt_api import ProduktApi
 from models.Koszyk import Koszyk
 from models.ProduktWKoszyku import ProduktWKoszyku
 from ui.QuantityChanger import QuantityChanger
+from ui.Worker import Worker
 
 
 class CartTable(QTableWidget):
@@ -25,6 +26,12 @@ class CartTable(QTableWidget):
         self.on_change = on_change
         # Komunikat o ostatnim błędzie pobierania cen (None = wszystko w porządku).
         self.error_message: str | None = None
+        # True, dopóki ceny są pobierane w tle.
+        self.loading = False
+
+        self._token = 0
+        self._wiersze: list[ProduktWKoszyku] = []
+        self._worker: Worker | None = None
 
         self.setColumnCount(len(self.COLUMNS))
         self.setHorizontalHeaderLabels(self.COLUMNS)
@@ -83,37 +90,45 @@ class CartTable(QTableWidget):
         widget.setMinimumSize(hint)
         return hint.width(), hint.height()
 
+    @staticmethod
+    def _teksty_cen(oferta: ProduktWKoszyku) -> tuple[str, str, str]:
+        # Ostatnio znane ceny (np. z poprzedniego pobrania) pokazujemy od razu.
+        if oferta.jednostka:
+            return (
+                f"{oferta.cena_netto:.2f} zł",
+                f"{oferta.cena_brutto:.2f} zł",
+                oferta.jednostka,
+            )
+        return "…", "…", "…"
+
+    def _ustaw_ceny(self, row: int, netto: str, brutto: str, jednostka: str):
+        right = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+        netto_item = QTableWidgetItem(netto)
+        brutto_item = QTableWidgetItem(brutto)
+        netto_item.setTextAlignment(right)
+        brutto_item.setTextAlignment(right)
+        self.setItem(row, 2, netto_item)
+        self.setItem(row, 3, brutto_item)
+        self.setItem(row, 4, QTableWidgetItem(jednostka))
+
     def populate_table(self):
         oferty = list(self.koszyk.get_oferty())
+        self._token += 1
+        token = self._token
+        self._wiersze = oferty
+        self.error_message = None
+        self.loading = bool(oferty)
+
         self.clearContents()
         self.setRowCount(len(oferty))
-        right = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
         qty_width = 170
         remove_width = 90
 
-        self.error_message = None
-
         for row, oferta in enumerate(oferty):
-
-            # Po pierwszym błędzie nie pytamy serwera dalej (unikamy wielu timeoutów).
-            if self.error_message is None:
-                try:
-                    oferta.pobierz_ceny()
-                except BladApi as e:
-                    self.error_message = str(e)
-            ceny_ok = self.error_message is None
-
             self.setItem(row, 0, QTableWidgetItem(oferta.hurtownia))
             self.setItem(row, 1, QTableWidgetItem(oferta.nazwa or oferta.EAN))
-
-            netto = QTableWidgetItem(f"{oferta.cena_netto:.2f} zł" if ceny_ok else "—")
-            brutto = QTableWidgetItem(f"{oferta.cena_brutto:.2f} zł" if ceny_ok else "—")
-            netto.setTextAlignment(right)
-            brutto.setTextAlignment(right)
-            self.setItem(row, 2, netto)
-            self.setItem(row, 3, brutto)
-            self.setItem(row, 4, QTableWidgetItem(oferta.jednostka if ceny_ok else "—"))
+            self._ustaw_ceny(row, *self._teksty_cen(oferta))
 
             changer = QuantityChanger(
                 self.koszyk, oferta.EAN, oferta.hurtownia,
@@ -135,6 +150,49 @@ class CartTable(QTableWidget):
         self.setColumnWidth(self.COL_REMOVE, remove_width)
         self._fit_rows()
         self._schedule_fit_rows()
+
+        if oferty:
+            self._pobierz_ceny_w_tle(token, oferty)
+
+    def _pobierz_ceny_w_tle(self, token: int, oferty: list[ProduktWKoszyku]):
+        klucze = [(o.hurtownia, o.EAN) for o in oferty]
+
+        def zadanie():
+            # Wykonywane w osobnym wątku - bez dostępu do widgetów i obiektów koszyka.
+            # Pierwszy błąd przerywa całość (unikamy wielu timeoutów z rzędu).
+            api = ProduktApi()
+            return [api.pobierz_cene_api(h, e) for h, e in klucze]
+
+        worker = Worker(zadanie, token)
+        worker.done.connect(self._on_ceny)
+        worker.failed.connect(self._on_ceny_blad)
+        self._worker = worker
+        worker.start()
+
+    def _on_ceny(self, token: int, ceny):
+        if token != self._token:
+            return
+        for row, (oferta, cena) in enumerate(zip(self._wiersze, ceny)):
+            oferta.cena_netto = cena.cena_netto
+            oferta.cena_brutto = cena.cena_brutto
+            oferta.jednostka = cena.jednostka
+            self._ustaw_ceny(row, *self._teksty_cen(oferta))
+        self.error_message = None
+        self._po_pobraniu_cen()
+
+    def _on_ceny_blad(self, token: int, message: str):
+        if token != self._token:
+            return
+        for row in range(len(self._wiersze)):
+            self._ustaw_ceny(row, "—", "—", "—")
+        self.error_message = message
+        self._po_pobraniu_cen()
+
+    def _po_pobraniu_cen(self):
+        self.loading = False
+        self._schedule_fit_rows()
+        if self.on_change:
+            self.on_change()
 
     def _schedule_refresh(self):
         QTimer.singleShot(0, self._refresh)

@@ -1,9 +1,10 @@
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget, QScrollArea, QGridLayout, QComboBox, \
     QHBoxLayout
-from integrations.Produkt_api import BladApi, ProduktApi
+from integrations.Produkt_api import ProduktApi
 from models.Ulubione import Ulubione
 from ui.ProductCard import ProductCard
+from ui.Worker import Worker
 
 
 class OffersPage(QWidget):
@@ -16,6 +17,9 @@ class OffersPage(QWidget):
         self.__quantity = "20"
         self.__offset = 0
         self.__products_count: int | None = None
+        self.__request_id = 0
+        self.__loading = False
+        self.__worker: Worker | None = None
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(40, 40, 40, 40)
@@ -23,6 +27,9 @@ class OffersPage(QWidget):
 
         title = QLabel("Przeglądaj ofertę")
         title.setObjectName("PageTitle")
+
+        self.loading_label = QLabel("Ładowanie produktów…")
+        self.loading_label.hide()
 
         self.error_label = QLabel()
         self.error_label.setObjectName("ErrorLabel")
@@ -37,10 +44,10 @@ class OffersPage(QWidget):
         back_button = QPushButton("Wróć do strony głównej")
         back_button.clicked.connect(lambda: go_to("home"))
 
-        quantity_combo = QComboBox()
-        quantity_combo.addItems(["20", "50", "100"])
-        quantity_combo.setCurrentText(self.__quantity)
-        quantity_combo.currentIndexChanged.connect(self.quantity_changed)
+        self.quantity_combo = QComboBox()
+        self.quantity_combo.addItems(["20", "50", "100"])
+        self.quantity_combo.setCurrentText(self.__quantity)
+        self.quantity_combo.currentIndexChanged.connect(self.quantity_changed)
 
 
         cards_container = QWidget()
@@ -74,11 +81,12 @@ class OffersPage(QWidget):
         nav_menu_layout.addWidget(self.next_button)
 
         layout.addWidget(title)
+        layout.addWidget(self.loading_label)
         layout.addWidget(self.error_label)
         layout.addWidget(self.retry_button)
         layout.addWidget(scroll)
         layout.addLayout(nav_menu_layout)
-        layout.addWidget(quantity_combo)
+        layout.addWidget(self.quantity_combo)
         layout.addWidget(back_button)
 
     def showEvent(self, event):
@@ -86,18 +94,50 @@ class OffersPage(QWidget):
         self.load_products()
 
     def load_products(self):
+        self.__request_id += 1
+        token = self.__request_id
+        quantity = self.__quantity
+        offset = self.__offset
+        znana_liczba = self.__products_count
+
+        def zadanie():
+            # Wykonywane w osobnym wątku - bez dostępu do widgetów.
+            api = ProduktApi()
+            liczba = znana_liczba
+            if liczba is None:
+                liczba = api.pobierz_produkty_count_api()
+            produkty = api.pobierz_produkty_api(limit=quantity, offset=offset)
+            return liczba, produkty
+
         self.clear_cards()
-        try:
-            if self.__products_count is None:
-                self.__products_count = ProduktApi().pobierz_produkty_count_api()
-            products = ProduktApi().pobierz_produkty_api(
-                limit=self.__quantity, offset=self.__offset
-            )
-        except BladApi as e:
-            self.show_error(str(e))
-        else:
-            self.hide_error()
-            self.add_product_cards(products)
+        self.hide_error()
+        self.__loading = True
+        self.loading_label.show()
+        self.update_navigation()
+
+        worker = Worker(zadanie, token)
+        worker.done.connect(self.on_products_loaded)
+        worker.failed.connect(self.on_products_failed)
+        self.__worker = worker
+        worker.start()
+
+    def on_products_loaded(self, token: int, wynik):
+        if token != self.__request_id:
+            return
+        liczba, produkty = wynik
+        self.__products_count = liczba
+        self.finish_loading()
+        self.add_product_cards(produkty)
+
+    def on_products_failed(self, token: int, message: str):
+        if token != self.__request_id:
+            return
+        self.finish_loading()
+        self.show_error(message)
+
+    def finish_loading(self):
+        self.__loading = False
+        self.loading_label.hide()
         self.update_navigation()
 
     def show_error(self, message: str):
@@ -135,10 +175,14 @@ class OffersPage(QWidget):
 
     def update_navigation(self):
         quantity = int(self.__quantity)
+        loading = self.__loading
         self.page_number_label.setText(str(self.__offset // quantity + 1))
-        self.prev_button.setEnabled(self.__offset > 0)
+        self.quantity_combo.setEnabled(not loading)
+        self.prev_button.setEnabled(not loading and self.__offset > 0)
         total = self.__products_count
-        self.next_button.setEnabled(total is not None and self.__offset + quantity < total)
+        self.next_button.setEnabled(
+            not loading and total is not None and self.__offset + quantity < total
+        )
 
     def quantity_changed(self, index):
         new_quantity = self.sender().itemText(index)
