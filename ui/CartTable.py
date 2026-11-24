@@ -4,9 +4,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from loaders.PricesLoader import PricesLoader
 from models.Koszyk import Koszyk
 from models.ProduktWKoszyku import ProduktWKoszyku
-from ui.PricesLoader import PricesLoader
 from ui.QuantityChanger import QuantityChanger
 
 

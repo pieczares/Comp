@@ -2,13 +2,17 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget, QScrollArea, QGridLayout, QComboBox, \
     QHBoxLayout
 from integrations.Produkt_api import BladApi, ProduktApi
+from loaders.ProductsLoader import ProductsLoader
 from models.Ulubione import Ulubione
 from ui.ProductCard import ProductCard
-from ui.ProductsLoader import ProductsLoader
+from ui.ProductPlaceholder import ProductPlaceholder
 
 
 class OffersPage(QWidget):
     product_selected = Signal(object)
+
+    # Ile szkieletów kart pokazujemy w trakcie ładowania.
+    PLACEHOLDER_COUNT = 12
 
     def __init__(self, ulubione:Ulubione, go_to):
         super().__init__()
@@ -106,6 +110,7 @@ class OffersPage(QWidget):
         self.hide_error()
         self.__loading = True
         self.loading_label.show()
+        self.add_placeholders()
         self.update_navigation()
 
         loader = ProductsLoader(
@@ -125,12 +130,14 @@ class OffersPage(QWidget):
         liczba, produkty = wynik
         self.__products_count = liczba
         self.finish_loading()
+        self.clear_cards()
         self.add_product_cards(produkty)
 
     def on_products_failed(self, token: int, message: str):
         if token != self.__request_id:
             return
         self.finish_loading()
+        self.clear_cards()
         self.show_error(message)
 
     def finish_loading(self):
@@ -147,6 +154,10 @@ class OffersPage(QWidget):
         self.error_label.hide()
         self.retry_button.hide()
 
+    def add_placeholders(self):
+        for index in range(self.PLACEHOLDER_COUNT):
+            self.cards_layout.addWidget(ProductPlaceholder(), index // 3, index % 3)
+
     def add_product_cards(self, products):
         row = 0
         col = 0
@@ -162,7 +173,7 @@ class OffersPage(QWidget):
                 row += 1
 
     def clear_cards(self):
-        # usuń wszystkie karty z layoutu
+        # usuń wszystkie karty i placeholdery z layoutu
         while self.cards_layout.count():
             item = self.cards_layout.takeAt(0)
             widget = item.widget()
