@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-
 from models.Oferta import Oferta
 
 class Produkt:
@@ -8,8 +6,6 @@ class Produkt:
         self.name = name
         self.EAN = EAN
         self.offers = offers
-
-    def __post_init__(self):
         self.offers = self.get_offers()
 
     def get_offers(self)-> list[Oferta]:
