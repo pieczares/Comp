@@ -14,24 +14,6 @@ class BladApi(Exception):
 
 class ProduktApi:
 
-    def healt_check(self) -> bool:
-        try:
-            response = requests.get(
-                "http://127.0.0.1:8000/health",
-                headers={"Accept": "application/json"},
-                timeout=(5, 10),
-            )
-            response.raise_for_status()
-            dane = response.json()
-            if not isinstance(dane, dict):
-                raise ValueError("API powinno zwrócić słownik.")
-            if dane.get("status") != "ok":
-                raise ValueError("API powinno zwrócić status 'ok'.")
-            return True
-        except (requests.RequestException, ValueError) as e:
-            print(f"Błąd podczas sprawdzania stanu API: {e}")
-            return False
-
     @staticmethod
     def _pobierz_json(sciezka: str, params: dict | None = None):
         params = {k: v for k, v in (params or {}).items() if v is not None}

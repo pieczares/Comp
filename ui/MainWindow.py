@@ -48,9 +48,7 @@ class MainWindow(QMainWindow):
         }
 
         page = pages.get(page_name)
-        if page_name == "cart":
-            self.cart_page.update_cart()
-        elif page_name == "favorites":
+        if page_name == "favorites":
             self.favorites_page.update_favorites()
         if page:
             self.stack.setCurrentWidget(page)

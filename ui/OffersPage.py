@@ -42,8 +42,6 @@ class OffersPage(QWidget):
         quantity_combo.setCurrentText(self.__quantity)
         quantity_combo.currentIndexChanged.connect(self.quantity_changed)
 
-        layout.addStretch()
-
 
         cards_container = QWidget()
         self.cards_layout = QGridLayout(cards_container)
@@ -79,10 +77,12 @@ class OffersPage(QWidget):
         layout.addWidget(self.error_label)
         layout.addWidget(self.retry_button)
         layout.addWidget(scroll)
-        layout.addWidget(back_button)
         layout.addLayout(nav_menu_layout)
         layout.addWidget(quantity_combo)
+        layout.addWidget(back_button)
 
+    def showEvent(self, event):
+        super().showEvent(event)
         self.load_products()
 
     def load_products(self):

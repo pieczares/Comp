@@ -8,7 +8,7 @@ from models.Koszyk import Koszyk
 from models.Ulubione import Ulubione
 from ui.MainWindow import MainWindow
 
-STYLE_FILES = ("styles.qss", "style.qss")
+STYLE_FILES = ("style.qss", "styles.qss")
 KOSZYK = Path("koszyk.pkl")
 ULUBIONE = Path("ulubione.pkl")
 

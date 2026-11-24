@@ -41,9 +41,10 @@ class CartPage(QWidget):
         layout.addWidget(self.tabela)
         layout.addWidget(self.empty_label)
         layout.addWidget(self.generate_button)
-        layout.addStretch()
         layout.addWidget(back_button)
 
+    def showEvent(self, event):
+        super().showEvent(event)
         self.update_cart()
 
     def _toggle_empty(self):
