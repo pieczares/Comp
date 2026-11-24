@@ -1,10 +1,10 @@
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget, QScrollArea, QGridLayout, QComboBox, \
     QHBoxLayout
-from integrations.Produkt_api import ProduktApi
+from integrations.Produkt_api import BladApi, ProduktApi
 from models.Ulubione import Ulubione
 from ui.ProductCard import ProductCard
-from ui.Worker import Worker
+from ui.ProductsLoader import ProductsLoader
 
 
 class OffersPage(QWidget):
@@ -16,10 +16,16 @@ class OffersPage(QWidget):
 
         self.__quantity = "20"
         self.__offset = 0
-        self.__products_count: int | None = None
         self.__request_id = 0
         self.__loading = False
-        self.__worker: Worker | None = None
+        self.__loader: ProductsLoader | None = None
+
+        # Liczba produktów pobierana przy inicjalizacji.
+        try:
+            self.__products_count: int | None = ProduktApi().pobierz_produkty_count_api()
+        except BladApi:
+            # Serwer niedostępny przy starcie - liczbę pobierze pierwsze ładowanie strony.
+            self.__products_count = None
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(40, 40, 40, 40)
@@ -95,19 +101,6 @@ class OffersPage(QWidget):
 
     def load_products(self):
         self.__request_id += 1
-        token = self.__request_id
-        quantity = self.__quantity
-        offset = self.__offset
-        znana_liczba = self.__products_count
-
-        def zadanie():
-            # Wykonywane w osobnym wątku - bez dostępu do widgetów.
-            api = ProduktApi()
-            liczba = znana_liczba
-            if liczba is None:
-                liczba = api.pobierz_produkty_count_api()
-            produkty = api.pobierz_produkty_api(limit=quantity, offset=offset)
-            return liczba, produkty
 
         self.clear_cards()
         self.hide_error()
@@ -115,11 +108,16 @@ class OffersPage(QWidget):
         self.loading_label.show()
         self.update_navigation()
 
-        worker = Worker(zadanie, token)
-        worker.done.connect(self.on_products_loaded)
-        worker.failed.connect(self.on_products_failed)
-        self.__worker = worker
-        worker.start()
+        loader = ProductsLoader(
+            self.__request_id,
+            limit=self.__quantity,
+            offset=self.__offset,
+            liczba_produktow=self.__products_count,
+        )
+        loader.done.connect(self.on_products_loaded)
+        loader.failed.connect(self.on_products_failed)
+        self.__loader = loader
+        loader.start()
 
     def on_products_loaded(self, token: int, wynik):
         if token != self.__request_id:

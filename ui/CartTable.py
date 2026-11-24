@@ -4,11 +4,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from integrations.Produkt_api import ProduktApi
 from models.Koszyk import Koszyk
 from models.ProduktWKoszyku import ProduktWKoszyku
+from ui.PricesLoader import PricesLoader
 from ui.QuantityChanger import QuantityChanger
-from ui.Worker import Worker
 
 
 class CartTable(QTableWidget):
@@ -31,7 +30,7 @@ class CartTable(QTableWidget):
 
         self._token = 0
         self._wiersze: list[ProduktWKoszyku] = []
-        self._worker: Worker | None = None
+        self._loader: PricesLoader | None = None
 
         self.setColumnCount(len(self.COLUMNS))
         self.setHorizontalHeaderLabels(self.COLUMNS)
@@ -152,22 +151,11 @@ class CartTable(QTableWidget):
         self._schedule_fit_rows()
 
         if oferty:
-            self._pobierz_ceny_w_tle(token, oferty)
-
-    def _pobierz_ceny_w_tle(self, token: int, oferty: list[ProduktWKoszyku]):
-        klucze = [(o.hurtownia, o.EAN) for o in oferty]
-
-        def zadanie():
-            # Wykonywane w osobnym wątku - bez dostępu do widgetów i obiektów koszyka.
-            # Pierwszy błąd przerywa całość (unikamy wielu timeoutów z rzędu).
-            api = ProduktApi()
-            return [api.pobierz_cene_api(h, e) for h, e in klucze]
-
-        worker = Worker(zadanie, token)
-        worker.done.connect(self._on_ceny)
-        worker.failed.connect(self._on_ceny_blad)
-        self._worker = worker
-        worker.start()
+            loader = PricesLoader(token, [(o.hurtownia, o.EAN) for o in oferty])
+            loader.done.connect(self._on_ceny)
+            loader.failed.connect(self._on_ceny_blad)
+            self._loader = loader
+            loader.start()
 
     def _on_ceny(self, token: int, ceny):
         if token != self._token:
