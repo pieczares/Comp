@@ -62,6 +62,7 @@ class FavoritesPage(QWidget):
         self.scroll.setVisible(bool(produkty))
 
         for produkt in produkty:
+            produkt.get_offers()
             self.items_layout.addWidget(self._create_item(produkt))
         self.items_layout.addStretch()
 

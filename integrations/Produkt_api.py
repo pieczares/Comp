@@ -94,7 +94,6 @@ class ProduktApi:
                 produkt = Produkt(
                     name=str(item["nazwa"]),
                     EAN=str(item["kod"]),
-                    offers=[],
                 )
 
                 produkty.append(produkt)
