@@ -1,12 +1,13 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QAbstractItemView, QFrame, QHeaderView, QLabel, QPushButton, QScrollArea,
-    QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
+    QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QHBoxLayout,
 )
 
 from models.Oferta import Oferta
 from models.Produkt import Produkt
 from models.Ulubione import Ulubione
+from ui.FavoriteButton import FavoriteButton
 
 
 class FavoritesPage(QWidget):
@@ -74,15 +75,23 @@ class FavoritesPage(QWidget):
         layout.setContentsMargins(16, 12, 16, 12)
         layout.setSpacing(8)
 
+        hlayout = QHBoxLayout()
+
         name_label = QLabel(produkt.name)
         name_label.setObjectName("ProductName")
         name_label.setWordWrap(True)
         name_label.setTextFormat(Qt.TextFormat.PlainText)
 
+        fav_button = FavoriteButton(self.ulubione, produkt)
+
+        hlayout.addWidget(name_label)
+        hlayout.addStretch()
+        hlayout.addWidget(fav_button)
+
         ean_label = QLabel(f"Kod: {produkt.EAN}")
         ean_label.setTextFormat(Qt.TextFormat.PlainText)
 
-        layout.addWidget(name_label)
+        layout.addLayout(hlayout)
         layout.addWidget(ean_label)
 
         if produkt.offers:
