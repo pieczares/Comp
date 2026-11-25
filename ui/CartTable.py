@@ -23,14 +23,15 @@ class CartTable(QTableWidget):
         super().__init__()
         self.koszyk = koszyk
         self.on_change = on_change
-        # Komunikat o ostatnim błędzie pobierania cen (None = wszystko w porządku).
+        # Komunikat o pierwszym błędzie pobierania cen (None = wszystko w porządku).
         self.error_message: str | None = None
         # True, dopóki ceny są pobierane w tle.
         self.loading = False
 
         self._token = 0
         self._wiersze: list[ProduktWKoszyku] = []
-        self._klucze_zadania: list[tuple[str, str]] = []
+        # (hurtownia, EAN) -> komunikat błędu dla pozycji, której ceny nie udało się pobrać.
+        self._bledy: dict[tuple[str, str], str] = {}
         self._loader: PricesLoader | None = None
 
         self.setColumnCount(len(self.COLUMNS))
@@ -91,6 +92,9 @@ class CartTable(QTableWidget):
         return hint.width(), hint.height()
 
     def _teksty_cen(self, oferta: ProduktWKoszyku) -> tuple[str, str, str]:
+        # Pozycja, której ceny nie udało się pobrać, nie pokazuje nieaktualnej ceny.
+        if (oferta.hurtownia, oferta.EAN) in self._bledy:
+            return "—", "—", "—"
         # Ostatnio znane ceny (np. z poprzedniego pobrania) pokazujemy od razu.
         if oferta.jednostka:
             return (
@@ -128,6 +132,7 @@ class CartTable(QTableWidget):
                 self._loader.anuluj()
                 self._loader = None
             self.error_message = None
+            self._bledy = {}
             self.loading = bool(oferty)
 
         self.clearContents()
@@ -164,27 +169,37 @@ class CartTable(QTableWidget):
         self._schedule_fit_rows()
 
         if odswiez_ceny and oferty:
-            self._klucze_zadania = [(o.hurtownia, o.EAN) for o in oferty]
-            loader = PricesLoader(self._token, self._klucze_zadania)
-            loader.done.connect(self._on_ceny)
+            loader = PricesLoader(self._token, [(o.hurtownia, o.EAN) for o in oferty])
+            loader.item.connect(self._on_cena)
+            loader.done.connect(self._on_ceny_koniec)
             loader.failed.connect(self._on_ceny_blad)
             self._loader = loader
             loader.start()
 
-    def _on_ceny(self, token: int, ceny):
+    def _on_cena(self, token: int, hurtownia: str, ean: str, cena, blad):
+        # Ceny spływają pozycja po pozycji; wiersze dopasowujemy po kluczu (hurtownia, EAN),
+        # bo tabela mogła zostać przebudowana w trakcie pobierania.
         if token != self._token:
             return
-        # Dopasowanie po kluczu (hurtownia, EAN) – wiersze mogły się zmienić w trakcie pobierania.
-        ceny_wg_klucza = dict(zip(self._klucze_zadania, ceny))
+        klucz = (hurtownia, ean)
+        if cena is None:
+            self._bledy[klucz] = blad or "Nieznany błąd."
         for row, oferta in enumerate(self._wiersze):
-            cena = ceny_wg_klucza.get((oferta.hurtownia, oferta.EAN))
-            if cena is None:
+            if (oferta.hurtownia, oferta.EAN) != klucz:
                 continue
-            oferta.cena_netto = cena.cena_netto
-            oferta.cena_brutto = cena.cena_brutto
-            oferta.jednostka = cena.jednostka
+            if cena is not None:
+                oferta.cena_netto = cena.cena_netto
+                oferta.cena_brutto = cena.cena_brutto
+                oferta.jednostka = cena.jednostka
             self._ustaw_ceny(row, *self._teksty_cen(oferta))
-        self.error_message = None
+        self._schedule_fit_rows()
+
+    def _on_ceny_koniec(self, token: int, _wynik):
+        if token != self._token:
+            return
+        # Błąd choćby jednej pozycji blokuje generowanie listy (CartPage czyta error_message),
+        # ale pozostałe pozycje pokazują już aktualne ceny.
+        self.error_message = next(iter(self._bledy.values()), None)
         self._po_pobraniu_cen()
 
     def _on_ceny_blad(self, token: int, message: str):
