@@ -11,7 +11,7 @@ from ui.ProductPlaceholder import ProductPlaceholder
 class OffersPage(QWidget):
     product_selected = Signal(object)
 
-    # Ile szkieletów kart pokazujemy w trakcie ładowania.
+    # Ile placeholderów kart pokazujemy w trakcie ładowania.
     PLACEHOLDER_COUNT = 20
     COLUMNS = 3
 
@@ -55,6 +55,7 @@ class OffersPage(QWidget):
 
         back_button = QPushButton("Wróć")
         back_button.clicked.connect(lambda: go_to("home"))
+        back_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.quantity_combo = QComboBox()
         self.quantity_combo.addItems(["20", "50", "100"])
@@ -79,17 +80,18 @@ class OffersPage(QWidget):
         self.prev_button.setToolTip("Poprzednia strona")
         self.prev_button.clicked.connect(self.previous)
         self.prev_button.setEnabled(False)
+        self.prev_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.next_button = QPushButton(">")
         self.next_button.setToolTip("Następna strona")
         self.next_button.clicked.connect(self.next)
         self.next_button.setEnabled(False)
+        self.next_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.page_number_label = QLabel("1")
         self.page_number_label.setObjectName("PageNumberLabel")
         self.page_number_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        # Jedna linia: po lewej zmiana stron, po prawej liczba produktów na stronie.
         nav_menu_layout = QHBoxLayout()
         nav_menu_layout.addWidget(self.prev_button)
         nav_menu_layout.addWidget(self.page_number_label)
@@ -104,7 +106,6 @@ class OffersPage(QWidget):
         layout.addWidget(self.retry_button)
         layout.addWidget(scroll)
         layout.addLayout(nav_menu_layout)
-        # Alignment sprawia, że przycisk ma rozmiar dopasowany do treści i leży po lewej.
         layout.addWidget(back_button, alignment=Qt.AlignmentFlag.AlignLeft)
 
     def showEvent(self, event):

@@ -29,9 +29,11 @@ class CartPage(QWidget):
         self.empty_label = QLabel("Koszyk jest pusty.")
 
         self.generate_button = QPushButton("Generuj listę")
+        self.generate_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.generate_button.clicked.connect(self.generate_list)
 
         back_button = QPushButton("Wróć do strony głównej")
+        back_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         back_button.clicked.connect(lambda: go_to("home"))
 
         self.tabela = CartTable(koszyk=self.koszyk, on_change=self._toggle_empty)
