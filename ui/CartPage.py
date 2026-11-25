@@ -57,8 +57,8 @@ class CartPage(QWidget):
         if blad:
             self.error_label.setText(f"Nie udało się pobrać aktualnych cen: {blad}")
         self.error_label.setVisible(bool(blad))
-        # Bez aktualnych cen nie generujemy listy zakupów.
-        self.generate_button.setEnabled(not blad)
+        # Bez aktualnych cen (błąd lub trwające pobieranie) nie generujemy listy zakupów.
+        self.generate_button.setEnabled(not blad and not self.tabela.loading)
 
     def update_cart(self):
         self.tabela.populate_table()

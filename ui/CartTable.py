@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from integrations.Produkt_api import BladApi
+from loaders.PricesLoader import PricesLoader
 from models.Koszyk import Koszyk
 from models.ProduktWKoszyku import ProduktWKoszyku
 from ui.QuantityChanger import QuantityChanger
@@ -23,8 +23,16 @@ class CartTable(QTableWidget):
         super().__init__()
         self.koszyk = koszyk
         self.on_change = on_change
-        # Komunikat o ostatnim błędzie pobierania cen (None = wszystko w porządku).
+        # Komunikat o pierwszym błędzie pobierania cen (None = wszystko w porządku).
         self.error_message: str | None = None
+        # True, dopóki ceny są pobierane w tle.
+        self.loading = False
+
+        self._token = 0
+        self._wiersze: list[ProduktWKoszyku] = []
+        # (hurtownia, EAN) -> komunikat błędu dla pozycji, której ceny nie udało się pobrać.
+        self._bledy: dict[tuple[str, str], str] = {}
+        self._loader: PricesLoader | None = None
 
         self.setColumnCount(len(self.COLUMNS))
         self.setHorizontalHeaderLabels(self.COLUMNS)
@@ -83,37 +91,60 @@ class CartTable(QTableWidget):
         widget.setMinimumSize(hint)
         return hint.width(), hint.height()
 
-    def populate_table(self):
+    def _teksty_cen(self, oferta: ProduktWKoszyku) -> tuple[str, str, str]:
+        # Pozycja, której ceny nie udało się pobrać, nie pokazuje nieaktualnej ceny.
+        if (oferta.hurtownia, oferta.EAN) in self._bledy:
+            return "—", "—", "—"
+        # Ostatnio znane ceny (np. z poprzedniego pobrania) pokazujemy od razu.
+        if oferta.jednostka:
+            return (
+                f"{oferta.cena_netto:.2f} zł",
+                f"{oferta.cena_brutto:.2f} zł",
+                oferta.jednostka,
+            )
+        if self.error_message:
+            return "—", "—", "—"
+        return "…", "…", "…"
+
+    def _ustaw_ceny(self, row: int, netto: str, brutto: str, jednostka: str):
+        right = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+        netto_item = QTableWidgetItem(netto)
+        brutto_item = QTableWidgetItem(brutto)
+        netto_item.setTextAlignment(right)
+        brutto_item.setTextAlignment(right)
+        self.setItem(row, 2, netto_item)
+        self.setItem(row, 3, brutto_item)
+        self.setItem(row, 4, QTableWidgetItem(jednostka))
+
+    def populate_table(self, odswiez_ceny: bool = True):
+        """Buduje tabelę z koszyka.
+
+        `odswiez_ceny=True` (wejście na stronę) pobiera aktualne ceny z serwera.
+        `odswiez_ceny=False` (zmiana ilości, usunięcie pozycji) tylko przebudowuje wiersze
+        z ostatnio znanych cen – bez zapytań sieciowych.
+        """
         oferty = list(self.koszyk.get_oferty())
+        self._wiersze = oferty
+
+        if odswiez_ceny or not oferty:
+            self._token += 1
+            if self._loader is not None:
+                self._loader.anuluj()
+                self._loader = None
+            self.error_message = None
+            self._bledy = {}
+            self.loading = bool(oferty)
+
         self.clearContents()
         self.setRowCount(len(oferty))
-        right = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
         qty_width = 170
         remove_width = 90
 
-        self.error_message = None
-
         for row, oferta in enumerate(oferty):
-
-            # Po pierwszym błędzie nie pytamy serwera dalej (unikamy wielu timeoutów).
-            if self.error_message is None:
-                try:
-                    oferta.pobierz_ceny()
-                except BladApi as e:
-                    self.error_message = str(e)
-            ceny_ok = self.error_message is None
-
             self.setItem(row, 0, QTableWidgetItem(oferta.hurtownia))
             self.setItem(row, 1, QTableWidgetItem(oferta.nazwa or oferta.EAN))
-
-            netto = QTableWidgetItem(f"{oferta.cena_netto:.2f} zł" if ceny_ok else "—")
-            brutto = QTableWidgetItem(f"{oferta.cena_brutto:.2f} zł" if ceny_ok else "—")
-            netto.setTextAlignment(right)
-            brutto.setTextAlignment(right)
-            self.setItem(row, 2, netto)
-            self.setItem(row, 3, brutto)
-            self.setItem(row, 4, QTableWidgetItem(oferta.jednostka if ceny_ok else "—"))
+            self._ustaw_ceny(row, *self._teksty_cen(oferta))
 
             changer = QuantityChanger(
                 self.koszyk, oferta.EAN, oferta.hurtownia,
@@ -124,6 +155,7 @@ class CartTable(QTableWidget):
             self.setCellWidget(row, self.COL_QTY, changer)
 
             remove_button = QPushButton("Usuń")
+            remove_button.setObjectName("QuantityButton")
             remove_button.clicked.connect(
                 lambda _=False, o=oferta: self.remove_offer(o)
             )
@@ -136,11 +168,60 @@ class CartTable(QTableWidget):
         self._fit_rows()
         self._schedule_fit_rows()
 
+        if odswiez_ceny and oferty:
+            loader = PricesLoader(self._token, [(o.hurtownia, o.EAN) for o in oferty])
+            loader.item.connect(self._on_cena)
+            loader.done.connect(self._on_ceny_koniec)
+            loader.failed.connect(self._on_ceny_blad)
+            self._loader = loader
+            loader.start()
+
+    def _on_cena(self, token: int, hurtownia: str, ean: str, cena, blad):
+        # Ceny spływają pozycja po pozycji; wiersze dopasowujemy po kluczu (hurtownia, EAN),
+        # bo tabela mogła zostać przebudowana w trakcie pobierania.
+        if token != self._token:
+            return
+        klucz = (hurtownia, ean)
+        if cena is None:
+            self._bledy[klucz] = blad or "Nieznany błąd."
+        for row, oferta in enumerate(self._wiersze):
+            if (oferta.hurtownia, oferta.EAN) != klucz:
+                continue
+            if cena is not None:
+                oferta.cena_netto = cena.cena_netto
+                oferta.cena_brutto = cena.cena_brutto
+                oferta.jednostka = cena.jednostka
+            self._ustaw_ceny(row, *self._teksty_cen(oferta))
+        self._schedule_fit_rows()
+
+    def _on_ceny_koniec(self, token: int, _wynik):
+        if token != self._token:
+            return
+        # Błąd choćby jednej pozycji blokuje generowanie listy (CartPage czyta error_message),
+        # ale pozostałe pozycje pokazują już aktualne ceny.
+        self.error_message = next(iter(self._bledy.values()), None)
+        self._po_pobraniu_cen()
+
+    def _on_ceny_blad(self, token: int, message: str):
+        if token != self._token:
+            return
+        for row in range(len(self._wiersze)):
+            self._ustaw_ceny(row, "—", "—", "—")
+        self.error_message = message
+        self._po_pobraniu_cen()
+
+    def _po_pobraniu_cen(self):
+        self.loading = False
+        self._schedule_fit_rows()
+        if self.on_change:
+            self.on_change()
+
     def _schedule_refresh(self):
         QTimer.singleShot(0, self._refresh)
 
     def _refresh(self):
-        self.populate_table()
+        # Zmiana ilości / usunięcie pozycji nie zmienia cen – nie pytamy serwera ponownie.
+        self.populate_table(odswiez_ceny=False)
         if self.on_change:
             self.on_change()
 

@@ -15,8 +15,20 @@
     font-weight: bold;
 }
 
-.QuantityButton {
+#QuantityButton {
     height: 16px;
     width: 16px;
     font-size: 14px;
+}
+
+#ProductPlaceholder {
+    background-color: white;
+    border: 1px solid #d8dfeb;
+    border-radius: 12px;
+}
+
+#PlaceholderBar {
+    background-color: #e3e8f0;
+    border: none;
+    border-radius: 6px;
 }

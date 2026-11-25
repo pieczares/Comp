@@ -1,11 +1,18 @@
+import os
 from decimal import Decimal
 
 import requests
+from requests.adapters import HTTPAdapter
 
 from models.Produkt import Produkt
 from models.Oferta import Oferta
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = os.environ.get("COMP_API_URL", "http://127.0.0.1:8000")
+
+# Jedna sesja = ponowne użycie połączeń (loadery wysyłają wiele zapytań równolegle).
+_SESSION = requests.Session()
+_SESSION.mount("http://", HTTPAdapter(pool_maxsize=16))
+_SESSION.mount("https://", HTTPAdapter(pool_maxsize=16))
 
 
 class BladApi(Exception):
@@ -18,7 +25,7 @@ class ProduktApi:
     def _pobierz_json(sciezka: str, params: dict | None = None):
         params = {k: v for k, v in (params or {}).items() if v is not None}
         try:
-            response = requests.get(
+            response = _SESSION.get(
                 f"{BASE_URL}{sciezka}",
                 params=params,
                 headers={"Accept": "application/json"},
@@ -79,7 +86,7 @@ class ProduktApi:
         except (KeyError, TypeError, ValueError, ArithmeticError) as e:
             raise BladApi(f"Serwer zwrócił nieprawidłowe dane ceny: {e}") from e
 
-    def pobierz_produkty_api(self, kod=None, limit=None, offset=None) ->list[Produkt]:
+    def pobierz_produkty_api(self, kod=None, limit=None, offset=None) -> list[Produkt]:
         dane = self._pobierz_json(
             "/produkty", {"kod": kod, "limit": limit, "offset": offset}
         )
@@ -91,13 +98,7 @@ class ProduktApi:
 
         try:
             for item in dane:
-                produkt = Produkt(
-                    name=str(item["nazwa"]),
-                    EAN=str(item["kod"]),
-                    offers=[],
-                )
-
-                produkty.append(produkt)
+                produkty.append(Produkt(name=str(item["nazwa"]), EAN=str(item["kod"])))
         except (KeyError, TypeError) as e:
             raise BladApi(f"Serwer zwrócił nieprawidłowe dane produktów: {e}") from e
 

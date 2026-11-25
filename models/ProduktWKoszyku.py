@@ -4,15 +4,17 @@ from decimal import Decimal
 from integrations.Produkt_api import ProduktApi
 
 
-@dataclass
 class ProduktWKoszyku:
-    EAN: str
-    hurtownia: str
-    ilosc: int
-    cena_netto: Decimal = Decimal("0.00")
-    cena_brutto: Decimal = Decimal("0.00")
-    jednostka: str = ""
-    nazwa: str = ""
+
+    def __init__(self, EAN: str, hurtownia: str, ilosc: int, nazwa: str = ""):
+        self.EAN = EAN
+        self.hurtownia = hurtownia
+        self.ilosc = ilosc
+        self.nazwa = nazwa
+        self.cena_netto = Decimal("0.00")
+        self.cena_brutto = Decimal("0.00")
+        self.jednostka = ""
+
 
     def pobierz_ceny (self):
         ceny = ProduktApi().pobierz_cene_api(self.hurtownia, self.EAN)
