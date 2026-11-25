@@ -83,8 +83,7 @@ class OffersPage(QWidget):
         self.next_button.setEnabled(False)
 
         self.page_number_label = QLabel("1")
-        #tymczasowo zmieniam kolor na żółty, bo nie widać numeru strony przy ciemnym motywie
-        self.page_number_label.setStyleSheet("color: yellow")
+        self.page_number_label.setObjectName("PageNumberLabel")
 
         nav_menu_layout = QHBoxLayout()
         nav_menu_layout.addWidget(self.prev_button)

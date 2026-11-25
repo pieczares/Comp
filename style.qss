@@ -38,6 +38,13 @@ QToolTip {
     background-color: transparent;
 }
 
+#PageNumberLabel {
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+    background-color: transparent;
+}
+
 /* ===== Kafelki ===== */
 #Tile {
     background-color: #ffffff;
