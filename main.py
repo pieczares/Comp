@@ -8,7 +8,7 @@ from models.Koszyk import Koszyk
 from models.Ulubione import Ulubione
 from ui.MainWindow import MainWindow
 
-STYLE_FILES = ("style.qss", "styles.qss")
+STYLE_FILE = "style.qss"
 KOSZYK = Path("koszyk.pkl")
 ULUBIONE = Path("ulubione.pkl")
 
@@ -24,13 +24,10 @@ def zapisz(plik:Path ,obj):
 
 def main():
     app = QApplication(sys.argv)
+    app.setStyle("Fusion")
 
     base_dir = Path(__file__).resolve().parent
-    app.setStyleSheet(
-        "\n".join(
-            (base_dir / name).read_text(encoding="utf-8") for name in STYLE_FILES
-        )
-    )
+    app.setStyleSheet((base_dir / STYLE_FILE).read_text(encoding="utf-8"))
 
 
     koszyk = wczytaj(KOSZYK, Koszyk())
