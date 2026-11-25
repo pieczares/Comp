@@ -28,11 +28,11 @@ class CartPage(QWidget):
 
         self.empty_label = QLabel("Koszyk jest pusty.")
 
-        self.generate_button = QPushButton("Generuj listę")
+        self.generate_button = QPushButton("Generuj listę pdf")
         self.generate_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.generate_button.clicked.connect(self.generate_list)
 
-        back_button = QPushButton("Wróć do strony głównej")
+        back_button = QPushButton("Wróć")
         back_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         back_button.clicked.connect(lambda: go_to("home"))
 
@@ -43,7 +43,7 @@ class CartPage(QWidget):
         layout.addWidget(self.tabela)
         layout.addWidget(self.empty_label)
         layout.addWidget(self.generate_button)
-        layout.addWidget(back_button)
+        layout.addWidget(back_button, alignment=Qt.AlignmentFlag.AlignLeft)
 
     def showEvent(self, event):
         super().showEvent(event)

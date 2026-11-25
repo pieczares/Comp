@@ -28,7 +28,8 @@ class OffersTable(QTableWidget):
 
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
 
-        self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
 
         self.setAlternatingRowColors(True)
         self.verticalHeader().setVisible(False)
