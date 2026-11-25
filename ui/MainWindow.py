@@ -1,5 +1,3 @@
-import pickle
-
 from PySide6.QtWidgets import QMainWindow, QStackedWidget
 
 from models.Koszyk import Koszyk
@@ -47,9 +45,8 @@ class MainWindow(QMainWindow):
             "favorites": self.favorites_page,
         }
 
+        # FavoritesPage odświeża się sama w showEvent (z ładowaniem ofert w tle).
         page = pages.get(page_name)
-        if page_name == "favorites":
-            self.favorites_page.update_favorites()
         if page:
             self.stack.setCurrentWidget(page)
 

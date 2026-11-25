@@ -23,7 +23,3 @@ class Ulubione:
         index = self.check_if_product_exists(produkt.EAN)
         if index != -1:
             del self.produkty[index]
-
-    def update_prices(self):
-        for produkt in self.produkty:
-            produkt.get_offers()

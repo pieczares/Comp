@@ -53,9 +53,20 @@ class ProductCard(QFrame):
         self.refresh()
 
     def refresh(self):
-        oferta = self.produkt.lowest_price()
-
         self.name_label.setText(self.produkt.name)
+        self.setToolTip("")
+
+        # Oferty ładują się w tle (OffersLoader) – do czasu ich przyjścia pokazujemy status.
+        if not self.produkt.offers_loaded:
+            if self.produkt.offers_error:
+                self.cena_netto.setText("Nie udało się pobrać ofert")
+                self.setToolTip(self.produkt.offers_error)
+            else:
+                self.cena_netto.setText("Ładowanie cen…")
+            self.cena_brutto.setText("")
+            return
+
+        oferta = self.produkt.lowest_price()
 
         if oferta is None:
             self.cena_netto.setText("Brak dostępnych ofert")

@@ -8,9 +8,10 @@ from integrations.Produkt_api import BladApi
 class Worker(QObject):
     """Baza dla zadań wykonywanych w osobnym wątku.
 
-    Podsłasa nadpisuje metodę `zadanie()` (wykonywaną w wątku roboczym, bez dostępu
+    Podklasa nadpisuje metodę `zadanie()` (wykonywaną w wątku roboczym, bez dostępu
     do widgetów Qt). Wynik wraca sygnałami `done` / `failed` w wątku GUI.
     Sygnały niosą token, dzięki czemu strona może zignorować nieaktualne wyniki.
+    Po `anuluj()` zadanie może się przerwać wcześniej, a sygnały nie są już emitowane.
     """
 
     done = Signal(int, object)
@@ -19,9 +20,17 @@ class Worker(QObject):
     def __init__(self, token: int = 0, parent=None):
         super().__init__(parent)
         self._token = token
+        self._anulowano = threading.Event()
 
     def zadanie(self):
         raise NotImplementedError
+
+    def anuluj(self):
+        self._anulowano.set()
+
+    @property
+    def anulowano(self) -> bool:
+        return self._anulowano.is_set()
 
     def start(self):
         threading.Thread(target=self._run, daemon=True).start()
@@ -30,11 +39,14 @@ class Worker(QObject):
         try:
             wynik = self.zadanie()
         except BladApi as e:
-            self._emit(self.failed, self._token, str(e))
+            if not self.anulowano:
+                self._emit(self.failed, self._token, str(e))
         except Exception as e:
-            self._emit(self.failed, self._token, f"Nieoczekiwany błąd: {e}")
+            if not self.anulowano:
+                self._emit(self.failed, self._token, f"Nieoczekiwany błąd: {e}")
         else:
-            self._emit(self.done, self._token, wynik)
+            if not self.anulowano:
+                self._emit(self.done, self._token, wynik)
 
     @staticmethod
     def _emit(sygnal, *args):

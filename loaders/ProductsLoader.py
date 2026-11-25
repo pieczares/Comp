@@ -3,13 +3,14 @@ from loaders.Worker import Worker
 
 
 class ProductsLoader(Worker):
-    """Wątek OffersPage: pobiera jedną stronę produktów.
+    """Wątek OffersPage: pobiera jedną stronę produktów (bez ofert).
 
     Jeśli liczba wszystkich produktów nie jest jeszcze znana, pobiera ją też.
     Wynik (`done`): krotka (liczba_produktów, lista_produktów).
+    Oferty ładuje osobno OffersLoader.
     """
 
-    def __init__(self, token: int, limit, offset: int, liczba_produktow: int | None = None, parent=None):
+    def __init__(self, token: int, limit: int, offset: int, liczba_produktow: int | None = None, parent=None):
         super().__init__(token, parent)
         self._limit = limit
         self._offset = offset

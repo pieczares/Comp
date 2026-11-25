@@ -30,6 +30,7 @@ class CartTable(QTableWidget):
 
         self._token = 0
         self._wiersze: list[ProduktWKoszyku] = []
+        self._klucze_zadania: list[tuple[str, str]] = []
         self._loader: PricesLoader | None = None
 
         self.setColumnCount(len(self.COLUMNS))
@@ -89,8 +90,7 @@ class CartTable(QTableWidget):
         widget.setMinimumSize(hint)
         return hint.width(), hint.height()
 
-    @staticmethod
-    def _teksty_cen(oferta: ProduktWKoszyku) -> tuple[str, str, str]:
+    def _teksty_cen(self, oferta: ProduktWKoszyku) -> tuple[str, str, str]:
         # Ostatnio znane ceny (np. z poprzedniego pobrania) pokazujemy od razu.
         if oferta.jednostka:
             return (
@@ -98,6 +98,8 @@ class CartTable(QTableWidget):
                 f"{oferta.cena_brutto:.2f} zł",
                 oferta.jednostka,
             )
+        if self.error_message:
+            return "—", "—", "—"
         return "…", "…", "…"
 
     def _ustaw_ceny(self, row: int, netto: str, brutto: str, jednostka: str):
@@ -110,13 +112,23 @@ class CartTable(QTableWidget):
         self.setItem(row, 3, brutto_item)
         self.setItem(row, 4, QTableWidgetItem(jednostka))
 
-    def populate_table(self):
+    def populate_table(self, odswiez_ceny: bool = True):
+        """Buduje tabelę z koszyka.
+
+        `odswiez_ceny=True` (wejście na stronę) pobiera aktualne ceny z serwera.
+        `odswiez_ceny=False` (zmiana ilości, usunięcie pozycji) tylko przebudowuje wiersze
+        z ostatnio znanych cen – bez zapytań sieciowych.
+        """
         oferty = list(self.koszyk.get_oferty())
-        self._token += 1
-        token = self._token
         self._wiersze = oferty
-        self.error_message = None
-        self.loading = bool(oferty)
+
+        if odswiez_ceny or not oferty:
+            self._token += 1
+            if self._loader is not None:
+                self._loader.anuluj()
+                self._loader = None
+            self.error_message = None
+            self.loading = bool(oferty)
 
         self.clearContents()
         self.setRowCount(len(oferty))
@@ -151,8 +163,9 @@ class CartTable(QTableWidget):
         self._fit_rows()
         self._schedule_fit_rows()
 
-        if oferty:
-            loader = PricesLoader(token, [(o.hurtownia, o.EAN) for o in oferty])
+        if odswiez_ceny and oferty:
+            self._klucze_zadania = [(o.hurtownia, o.EAN) for o in oferty]
+            loader = PricesLoader(self._token, self._klucze_zadania)
             loader.done.connect(self._on_ceny)
             loader.failed.connect(self._on_ceny_blad)
             self._loader = loader
@@ -161,7 +174,12 @@ class CartTable(QTableWidget):
     def _on_ceny(self, token: int, ceny):
         if token != self._token:
             return
-        for row, (oferta, cena) in enumerate(zip(self._wiersze, ceny)):
+        # Dopasowanie po kluczu (hurtownia, EAN) – wiersze mogły się zmienić w trakcie pobierania.
+        ceny_wg_klucza = dict(zip(self._klucze_zadania, ceny))
+        for row, oferta in enumerate(self._wiersze):
+            cena = ceny_wg_klucza.get((oferta.hurtownia, oferta.EAN))
+            if cena is None:
+                continue
             oferta.cena_netto = cena.cena_netto
             oferta.cena_brutto = cena.cena_brutto
             oferta.jednostka = cena.jednostka
@@ -187,7 +205,8 @@ class CartTable(QTableWidget):
         QTimer.singleShot(0, self._refresh)
 
     def _refresh(self):
-        self.populate_table()
+        # Zmiana ilości / usunięcie pozycji nie zmienia cen – nie pytamy serwera ponownie.
+        self.populate_table(odswiez_ceny=False)
         if self.on_change:
             self.on_change()
 
