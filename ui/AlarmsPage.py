@@ -153,7 +153,7 @@ class AlarmsPage(QWidget):
             float(alarm.cena), 0.01, 1_000_000.0, 2,
         )
         if ok:
-            alarm.zmien_cene(Decimal(str(cena)))
+            alarm.zmien_cene(Decimal(cena))
             self._render()
 
     def _toggle(self, alarm: Alarm):
