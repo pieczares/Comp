@@ -5,18 +5,21 @@ from PySide6.QtWidgets import (
 )
 
 from loaders.OffersLoader import OffersLoader
+from models.Alarmy import Alarmy
 from models.Oferta import Oferta
 from models.Produkt import Produkt
 from models.Ulubione import Ulubione
+from ui.AlarmButton import AlarmButton
 from ui.FavoriteButton import FavoriteButton
 
 
 class FavoritesPage(QWidget):
     COLUMNS = ["Hurtownia", "Cena netto", "Cena brutto", "Jednostka"]
 
-    def __init__(self, go_to, ulubione: Ulubione):
+    def __init__(self, go_to, ulubione: Ulubione, alarmy: Alarmy):
         super().__init__()
         self.ulubione = ulubione
+        self.alarmy = alarmy
 
         self._token = 0
         self._loader: OffersLoader | None = None
@@ -108,10 +111,12 @@ class FavoritesPage(QWidget):
         name_label.setWordWrap(True)
         name_label.setTextFormat(Qt.TextFormat.PlainText)
 
+        alarm_button = AlarmButton(self.alarmy, produkt)
         fav_button = FavoriteButton(self.ulubione, produkt)
 
         hlayout.addWidget(name_label)
         hlayout.addStretch()
+        hlayout.addWidget(alarm_button)
         hlayout.addWidget(fav_button)
 
         ean_label = QLabel(f"Kod: {produkt.EAN}")

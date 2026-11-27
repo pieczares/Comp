@@ -4,6 +4,7 @@ from pathlib import Path
 
 from PySide6.QtWidgets import QApplication
 
+from models.Alarmy import Alarmy
 from models.Koszyk import Koszyk
 from models.Ulubione import Ulubione
 from ui.MainWindow import MainWindow
@@ -11,6 +12,7 @@ from ui.MainWindow import MainWindow
 STYLE_FILE = "style.qss"
 KOSZYK = Path("koszyk.pkl")
 ULUBIONE = Path("ulubione.pkl")
+ALARMY = Path("alarmy.pkl")
 
 def wczytaj(plik: Path, domyslny):
     if plik.exists():
@@ -32,13 +34,15 @@ def main():
 
     koszyk = wczytaj(KOSZYK, Koszyk())
     ulubione = wczytaj(ULUBIONE, Ulubione())
+    alarmy = wczytaj(ALARMY, Alarmy())
 
-    window = MainWindow(koszyk=koszyk, ulubione=ulubione)
+    window = MainWindow(koszyk=koszyk, ulubione=ulubione, alarmy=alarmy)
     window.show()
 
     def przy_wyjsciu():
         zapisz(KOSZYK, koszyk)
         zapisz(ULUBIONE, ulubione)
+        zapisz(ALARMY, alarmy)
 
     app.aboutToQuit.connect(przy_wyjsciu)
 

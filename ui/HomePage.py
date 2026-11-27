@@ -62,6 +62,10 @@ class HomePage(QWidget):
             Tile("Ulubione", "Twoje zapisane produkty", lambda: go_to("favorites")),
             0, 2,
         )
+        tiles_layout.addWidget(
+            Tile("Alarmy cenowe", "Zarządzaj alarmami", lambda: go_to("alarms")),
+            1, 0,
+        )
 
         root_layout.addWidget(header)
         root_layout.addLayout(tiles_layout)

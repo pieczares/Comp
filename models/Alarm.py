@@ -1,26 +1,22 @@
-from dataclasses import dataclass
 from decimal import Decimal
 
 from models.Produkt import Produkt
 
-class Alarm:
-    __produkt: Produkt
-    __cena: Decimal
-    __czy_aktywny: bool = True
 
+class Alarm:
     def __init__(self, produkt: Produkt, cena: Decimal):
-        self.__produkt = produkt
-        self.__cena = cena
-        self.__czy_aktywny = True
+        self.produkt = produkt
+        self.cena = Decimal(str(cena))
+        self.aktywny = True
 
     def zmien_cene(self, cena: Decimal):
-        temp=self.__cena
-        self.__cena = cena
-        print("cena zmieniona z ", temp, "na ", cena)
+        self.cena = Decimal(str(cena))
 
     def zmien_aktywnosc(self):
-        self.__czy_aktywny = not self.__czy_aktywny
-        if self.__czy_aktywny:
-            print("włączony")
-        else:
-            print("wyłączony")
+        self.aktywny = not self.aktywny
+
+    def czy_spelniony(self) -> bool:
+        oferta = self.produkt.lowest_price()
+        if oferta is None:
+            return False
+        return Decimal(str(oferta.cena_brutto)) <= self.cena

@@ -1,8 +1,10 @@
 from PySide6.QtWidgets import QMainWindow, QStackedWidget
 
+from models.Alarmy import Alarmy
 from models.Koszyk import Koszyk
 from models.Produkt import Produkt
 from models.Ulubione import Ulubione
+from ui.AlarmsPage import AlarmsPage
 from ui.HomePage import HomePage
 from ui.OffersPage import OffersPage
 from ui.CartPage import CartPage
@@ -11,10 +13,11 @@ from ui.ProductDetailsPage import ProductDetailsPage
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, koszyk: Koszyk, ulubione: Ulubione):
+    def __init__(self, koszyk: Koszyk, ulubione: Ulubione, alarmy: Alarmy):
         super().__init__()
         self.koszyk = koszyk
         self.ulubione = ulubione
+        self.alarmy = alarmy
 
         self.setWindowTitle("Sklep")
         self.resize(900, 600)
@@ -25,7 +28,8 @@ class MainWindow(QMainWindow):
         self.home_page = HomePage(self.go_to)
         self.offers_page = OffersPage(self.ulubione, self.go_to)
         self.cart_page = CartPage(self.go_to, self.koszyk)
-        self.favorites_page = FavoritesPage(self.go_to, self.ulubione)
+        self.favorites_page = FavoritesPage(self.go_to, self.ulubione, self.alarmy)
+        self.alarms_page = AlarmsPage(self.go_to, self.alarmy)
         self.product_details_page = ProductDetailsPage(self.go_to, self.koszyk, self.ulubione)
 
         self.offers_page.product_selected.connect(self.show_product_details)
@@ -34,6 +38,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.offers_page)
         self.stack.addWidget(self.cart_page)
         self.stack.addWidget(self.favorites_page)
+        self.stack.addWidget(self.alarms_page)
         self.stack.addWidget(self.product_details_page)
 
     #Przełączanie między stronami
@@ -43,9 +48,10 @@ class MainWindow(QMainWindow):
             "offers": self.offers_page,
             "cart": self.cart_page,
             "favorites": self.favorites_page,
+            "alarms": self.alarms_page,
         }
 
-        # FavoritesPage odświeża się sama w showEvent (z ładowaniem ofert w tle).
+        # FavoritesPage i AlarmsPage odświeżają się same w showEvent.
         page = pages.get(page_name)
         if page:
             self.stack.setCurrentWidget(page)
