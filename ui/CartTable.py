@@ -42,6 +42,8 @@ class CartTable(QTableWidget):
         self.setWordWrap(True)
         self.setTextElideMode(Qt.TextElideMode.ElideNone)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
 
         vheader = self.verticalHeader()
         vheader.setVisible(False)

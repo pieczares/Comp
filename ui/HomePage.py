@@ -63,13 +63,6 @@ class HomePage(QWidget):
             0, 2,
         )
 
-        buttons_layout = QHBoxLayout()
-        back_button = QPushButton("Wróć")
-        back_button.clicked.connect(lambda: go_to("home"))
-        buttons_layout.addWidget(back_button)
-        buttons_layout.addStretch()
-
         root_layout.addWidget(header)
         root_layout.addLayout(tiles_layout)
         root_layout.addStretch()
-        root_layout.addLayout(buttons_layout)

@@ -11,7 +11,7 @@ from ui.ProductPlaceholder import ProductPlaceholder
 class OffersPage(QWidget):
     product_selected = Signal(object)
 
-    # Ile szkieletów kart pokazujemy w trakcie ładowania.
+    # Ile placeholderów kart pokazujemy w trakcie ładowania.
     PLACEHOLDER_COUNT = 20
     COLUMNS = 3
 
@@ -53,12 +53,14 @@ class OffersPage(QWidget):
         self.retry_button.clicked.connect(self.load_products)
         self.retry_button.hide()
 
-        back_button = QPushButton("Wróć do strony głównej")
+        back_button = QPushButton("Wróć")
         back_button.clicked.connect(lambda: go_to("home"))
+        back_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.quantity_combo = QComboBox()
         self.quantity_combo.addItems(["20", "50", "100"])
         self.quantity_combo.setCurrentText(str(self._quantity))
+        self.quantity_combo.setToolTip("Liczba produktów na stronie")
         self.quantity_combo.currentIndexChanged.connect(self.quantity_changed)
 
         cards_container = QWidget()
@@ -74,22 +76,28 @@ class OffersPage(QWidget):
         scroll.setWidgetResizable(True)
         scroll.setWidget(cards_container)
 
-        self.prev_button = QPushButton("Poprzednia strona")
+        self.prev_button = QPushButton("<")
+        self.prev_button.setToolTip("Poprzednia strona")
         self.prev_button.clicked.connect(self.previous)
         self.prev_button.setEnabled(False)
+        self.prev_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        self.next_button = QPushButton("Następna strona")
+        self.next_button = QPushButton(">")
+        self.next_button.setToolTip("Następna strona")
         self.next_button.clicked.connect(self.next)
         self.next_button.setEnabled(False)
+        self.next_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.page_number_label = QLabel("1")
-        #tymczasowo zmieniam kolor na żółty, bo nie widać numeru strony przy ciemnym motywie
-        self.page_number_label.setStyleSheet("color: yellow")
+        self.page_number_label.setObjectName("PageNumberLabel")
+        self.page_number_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         nav_menu_layout = QHBoxLayout()
         nav_menu_layout.addWidget(self.prev_button)
         nav_menu_layout.addWidget(self.page_number_label)
         nav_menu_layout.addWidget(self.next_button)
+        nav_menu_layout.addStretch(1)
+        nav_menu_layout.addWidget(self.quantity_combo)
 
         layout.addWidget(title)
         layout.addWidget(self.loading_label)
@@ -98,8 +106,7 @@ class OffersPage(QWidget):
         layout.addWidget(self.retry_button)
         layout.addWidget(scroll)
         layout.addLayout(nav_menu_layout)
-        layout.addWidget(self.quantity_combo)
-        layout.addWidget(back_button)
+        layout.addWidget(back_button, alignment=Qt.AlignmentFlag.AlignLeft)
 
     def showEvent(self, event):
         super().showEvent(event)
